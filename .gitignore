@@ -1,0 +1,16 @@
+# Flutter
+.dart_tool/
+build/
+android/.gradle/
+android/app/build/
+*.log
+
+# Node
+node_modules/
+server/.env
+.env
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
