@@ -13,6 +13,7 @@ class PartyController extends GetxController {
   PartyController({required this.socket});
 
   final RxString selectedCategory = 'science'.obs;
+  final RxBool bluffMode = false.obs;
   final RxBool creating = false.obs;
   final Rxn<RoomInfo> room = Rxn<RoomInfo>();
   final RxList<RoomPlayer> players = <RoomPlayer>[].obs;
@@ -23,7 +24,11 @@ class PartyController extends GetxController {
   void createRoom() {
     creating.value = true;
     _listenRoomCreatedOnce();
-    socket.createRoom('party', selectedCategory.value);
+    if (bluffMode.value) {
+      socket.createBluffRoom(selectedCategory.value);
+    } else {
+      socket.createRoom('party', selectedCategory.value);
+    }
     _guardStuckSpinner();
   }
 
@@ -55,7 +60,7 @@ class PartyController extends GetxController {
         if (code.isEmpty) return;
         room.value = RoomInfo(
           code: code,
-          mode: 'party',
+          mode: bluffMode.value ? 'bluff' : 'party',
           category: selectedCategory.value,
         );
         isHost.value = true;

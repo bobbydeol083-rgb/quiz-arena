@@ -29,6 +29,11 @@ import '../modules/results/bindings/results_binding.dart';
 import '../modules/results/views/results_view.dart';
 import '../modules/settings/bindings/settings_binding.dart';
 import '../modules/settings/views/settings_view.dart';
+import '../modules/packs/bindings/packs_binding.dart';
+import '../modules/packs/views/packs_view.dart';
+import '../modules/packs/views/pack_editor_view.dart';
+import '../modules/bluff/bindings/bluff_binding.dart';
+import '../modules/bluff/views/bluff_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 
@@ -141,6 +146,27 @@ class AppPages {
       name: Routes.settings,
       page: () => const SettingsView(),
       binding: SettingsBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.packs,
+      page: () => const PacksView(),
+      binding: PacksBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.packEditor,
+      page: () => const PackEditorView(),
+      binding: PackEditorBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.bluff,
+      page: () => const BluffView(),
+      binding: BluffBinding(),
       customTransition: ArenaPageTransition(),
       transitionDuration: const Duration(milliseconds: 350),
     ),

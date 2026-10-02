@@ -41,6 +41,40 @@ class PartyView extends GetView<PartyController> {
           ),
           const SizedBox(height: AppSpacing.md),
           _categoryChips(),
+          const SizedBox(height: AppSpacing.md),
+          Obx(
+            () => Row(
+              children: [
+                ChoiceChip(
+                  label: const Text('🧠 Classic quiz'),
+                  selected: !controller.bluffMode.value,
+                  onSelected: (_) =>
+                      controller.bluffMode.value = false,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                ChoiceChip(
+                  label: const Text('🎭 Bluff & Brain'),
+                  selected: controller.bluffMode.value,
+                  onSelected: (_) =>
+                      controller.bluffMode.value = true,
+                ),
+              ],
+            ),
+          ),
+          Obx(
+            () => controller.bluffMode.value
+                ? Padding(
+                    padding: const EdgeInsets.only(
+                        top: AppSpacing.xs),
+                    child: Text(
+                      'Write fake answers, fool your friends, spot the truth.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
           const SizedBox(height: AppSpacing.xl),
           Obx(
             () => GradientButton(

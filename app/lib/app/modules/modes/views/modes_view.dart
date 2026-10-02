@@ -5,6 +5,7 @@ import 'package:quiz_arena/app/core/values/app_values.dart';
 import 'package:quiz_arena/app/core/widgets/widgets.dart';
 import 'package:quiz_arena/app/modules/modes/controllers/modes_controller.dart';
 import 'package:quiz_arena/app/modules/quiz/controllers/quiz_controller.dart';
+import 'package:quiz_arena/app/routes/app_routes.dart';
 
 class ModesView extends GetView<ModesController> {
   const ModesView({super.key});
@@ -43,6 +44,11 @@ class ModesView extends GetView<ModesController> {
                 if (i < controller.modes.length - 1)
                   const SizedBox(height: AppSpacing.md),
               ],
+              const SizedBox(height: AppSpacing.md),
+              FadeSlideIn(
+                index: controller.modes.length + 1,
+                child: _PacksCard(),
+              ),
             ],
           ),
         ),
@@ -238,6 +244,53 @@ class _ModeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.lg - 1.6),
         ),
         child: card,
+      ),
+    );
+  }
+}
+
+/// Entry point to community game packs: install and play custom games,
+/// or publish your own.
+class _PacksCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      onTap: () => Get.toNamed(Routes.packs),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              gradient: AppGradients.primary,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              '📦',
+              style: TextStyle(fontSize: 30),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Game Packs',
+                  style: TextStyle(
+                      fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Play community-made games — or publish your own.',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded),
+        ],
       ),
     );
   }

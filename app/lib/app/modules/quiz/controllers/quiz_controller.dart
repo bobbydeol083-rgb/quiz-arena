@@ -81,6 +81,9 @@ class QuizArgs {
   final String? roomId;
   final String? opponentName;
   final String? opponentId;
+  /// Set when playing an installed game pack: questions are custom, so the
+  /// game is always graded locally (the server never saw these questions).
+  final String? packId;
 
   QuizArgs({
     required this.mode,
@@ -90,6 +93,7 @@ class QuizArgs {
     this.roomId,
     this.opponentName,
     this.opponentId,
+    this.packId,
   });
 }
 
@@ -121,6 +125,7 @@ class QuizController extends GetxController {
   String? categoryId;
   String? difficulty;
   String? roomId;
+  String? packId;
 
   int get questionTimeMs {
     switch (mode) {
@@ -215,6 +220,7 @@ class QuizController extends GetxController {
     categoryId = args.categoryId;
     difficulty = args.difficulty;
     roomId = args.roomId;
+    packId = args.packId;
     opponentName.value = args.opponentName ?? '';
     lives.value = AppConfig.marathonLives;
     if (isRealtime) _attachSocketListeners();
@@ -446,14 +452,30 @@ class QuizController extends GetxController {
         // authoritative, so locally evaluated badges are not merged in).
         await progressRepo.recordGame(result);
       } else {
-        final rest = await quizRepo.submitQuiz(
-          mode: mode.apiValue,
-          categoryId: categoryId,
-          difficulty: difficulty,
-          answers: List.unmodifiable(_answers),
-          startedAt: _gameStartedAt ?? DateTime.now(),
-          questions: List.unmodifiable(questions),
-        );
+        final QuizSubmitResult rest;
+        if (packId != null) {
+          // Installed game pack: custom questions the server never saw —
+          // always grade locally (works offline too).
+          final user = auth.currentUser.value;
+          rest = QuizEngine.gradeOffline(
+            questions: List.unmodifiable(questions),
+            answers: List.unmodifiable(_answers),
+            mode: mode.apiValue,
+            categoryId: categoryId,
+            difficulty: difficulty,
+            previousXp: user?.xp ?? 0,
+            previousStreak: user?.streak ?? 0,
+          );
+        } else {
+          rest = await quizRepo.submitQuiz(
+            mode: mode.apiValue,
+            categoryId: categoryId,
+            difficulty: difficulty,
+            answers: List.unmodifiable(_answers),
+            startedAt: _gameStartedAt ?? DateTime.now(),
+            questions: List.unmodifiable(questions),
+          );
+        }
 
         // Local badge evaluation (server may also return newBadges; merge).
         final localBadges = await progressRepo.recordGame(rest);

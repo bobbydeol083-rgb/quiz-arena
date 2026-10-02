@@ -41,6 +41,7 @@ class RealtimeController extends GetxService {
     socket.on(SocketEvents.duelAccepted, _onDuelAccepted);
     socket.on(SocketEvents.matchFound, _onMatchFound);
     socket.on(SocketEvents.gameStart, _onGameStart);
+    socket.on(SocketEvents.bluffStart, _onBluffStart);
   }
 
   void _onMatchFound(dynamic data) {
@@ -138,6 +139,15 @@ class RealtimeController extends GetxService {
           opponentId: oppId,
         ),
       );
+    } catch (_) {}
+  }
+
+  /// Bluff & Brain: the host's room:start deals bluff rounds instead of a
+  /// classic game. Open the bluff table for every player in the room.
+  void _onBluffStart(dynamic data) {
+    try {
+      if (Get.currentRoute == Routes.bluff) return;
+      Get.toNamed(Routes.bluff);
     } catch (_) {}
   }
 }

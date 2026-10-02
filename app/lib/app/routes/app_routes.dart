@@ -21,6 +21,9 @@ class Routes {
   static const String leaderboard = '/leaderboard';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String packs = '/packs';
+  static const String packEditor = '/pack-editor';
+  static const String bluff = '/bluff';
 
   /// Bottom-nav tabs (order matters for the sliding indicator).
   static const List<String> tabs = [home, discover, leaderboard, profile];
