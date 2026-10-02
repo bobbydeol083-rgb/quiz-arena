@@ -30,6 +30,21 @@ class SocketEvents {
   // server -> client (party rooms — names verified against the backend)
   static const String roomCreated = 'room:created';
   static const String roomUpdate = 'room:update';
+
+  // ---- Bluff & Brain (client -> server) ----
+  static const String bluffFake = 'bluff:fake';
+  static const String bluffVote = 'bluff:vote';
+  static const String bluffPowerup = 'bluff:powerup';
+
+  // ---- Bluff & Brain (server -> client) ----
+  static const String bluffStart = 'bluff:start';
+  static const String bluffRound = 'bluff:round';
+  static const String bluffFakesIn = 'bluff:fakes_in';
+  static const String bluffVotePhase = 'bluff:vote';
+  static const String bluffReveal = 'bluff:reveal';
+  static const String bluffEnd = 'bluff:end';
+  static const String bluffPowerupResult = 'bluff:powerup_result';
+  static const String bluffPlayerLeft = 'bluff:player_left';
 }
 
 /// Wraps socket_io_client with the app's auth token. All realtime features
@@ -133,6 +148,24 @@ class SocketService extends GetxService {
         'questionId': questionId,
         'selectedIndex': selectedIndex,
       });
+
+  // ---- Bluff & Brain typed helpers ----------------------------------------
+  void createBluffRoom(String category) =>
+      emit(SocketEvents.roomCreate, {'mode': 'bluff', 'category': category});
+
+  void submitBluffFake(String text) =>
+      emit(SocketEvents.bluffFake, {'text': text});
+
+  void voteBluff(String optionId) =>
+      emit(SocketEvents.bluffVote, {'optionId': optionId});
+
+  void useBluffPowerup(String type, {String? targetUserId}) => emit(
+        SocketEvents.bluffPowerup,
+        {
+          'type': type,
+          if (targetUserId != null) 'targetUserId': targetUserId,
+        },
+      );
 
   @override
   void onClose() {

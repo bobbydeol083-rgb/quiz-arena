@@ -7,3 +7,4 @@ export 'leaderboard.dart';
 export 'nearby.dart';
 export 'room.dart';
 export 'progress.dart';
+export 'game_pack.dart';

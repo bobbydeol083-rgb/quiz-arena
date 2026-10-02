@@ -45,9 +45,19 @@ Auth uses `Authorization: Bearer <accessToken>`.
 | GET    | `/users/:id`                    | –    | 200 `{user:{id,username,avatar,xp,level,tier,coins,streak,badges,online,lastSeen},stats}` |
 | POST   | `/players/location`             | ✅   | `{lng,lat}` → 200 `{ok:true}` |
 | GET    | `/players/nearby?maxDistance=5000&limit=20` | ✅ | 200 `[{id,username,avatar,xp,level,online,distanceM}]` (excludes self, `$near` sorted) |
-| POST   | `/rooms`                        | ✅   | `{mode,category?}` → 201 `{code,roomId}` |
+| POST   | `/rooms`                        | ✅   | `{mode,category?}` (`mode`: `duel`\|`room`\|`bluff`) → 201 `{code,roomId}` |
 | GET    | `/rooms/:code`                  | ✅   | 200 `{room}` |
 | POST   | `/rooms/:code/join`             | ✅   | 200 `{room}` |
+| POST   | `/packs`                        | ✅   | `{title,description?,label?,mode?,questions:[{question,options[4],answerIndex,explanation?}]}` (5–50 questions) → 201 draft pack (answers visible to author) |
+| GET    | `/packs?search=&mode=&sort=popular\|newest` | – | 200 `{packs:[card],page,limit,total}` — cards never include answers |
+| GET    | `/packs/mine`                   | ✅   | 200 `{packs}` (own drafts + published, with status) |
+| GET    | `/packs/:id`                    | optional | 200 pack detail; answers only for the author |
+| PUT    | `/packs/:id`                    | ✅   | update own **draft** (409 if published) → 200 |
+| POST   | `/packs/:id/publish`            | ✅   | draft → published → 200 |
+| POST   | `/packs/:id/unpublish`          | ✅   | published → draft → 200 |
+| DELETE | `/packs/:id`                    | ✅   | delete own pack → 200 `{deleted:true}` |
+| POST   | `/packs/:id/install`            | ✅   | 200 full pack **with answers** for local caching/offline play (+1 install) |
+| POST   | `/packs/:id/played`             | ✅   | best-effort play counter → 200 |
 
 `user` shape (register/login): `{id,username,email,avatar,xp,level,tier,coins,streak:{count,lastPlayedAt},badges,online,lastSeen,stats}`.
 
@@ -66,7 +76,9 @@ both `POST /api/quiz/submit` and the Socket.io game flow:
 - **Streak** — same calendar day keeps it, yesterday increments, older resets.
 - **Badges** — `first_blood`, `sharpshooter` (≥8/10), `perfectionist` (10/10),
   `speed_demon` (avg <5s), `streak_3`, `streak_7`, `marathoner` (marathon ≥15),
-  `duelist` (duel win), `scholar` (100 correct all-time).
+  `duelist` (duel win), `scholar` (100 correct all-time),
+  Bluff & Brain ladder: `fibber` (≥4 fooled in a game), `deceiver` (≥10),
+  `truth_hunter` (perfect truth round).
 
 Grading is always server-side: the client never sees `answerIndex`, and
 `/quiz/submit` re-loads questions from MongoDB before scoring.
@@ -90,7 +102,18 @@ Connect, then emit `authenticate {token}`. Unauthenticated sockets receive only
 | → | `room:leave` | leaves the room + any live game; if the game drops to ≤1 player it ends immediately with reason `forfeit` (remaining player wins) |\n| → | `game:answer` | `{questionId, selectedIndex}` (`-1` = timed out/skipped: counted as answered, never correct) → ack `{correct}`; room gets `game:score {scores[]}` |
 | ← | `game:end` | `{roomId, reason, winner, scores[], rewards[]}` (rewards carry xp/coins/badges/levelUp per player) |
 | ← | `player:left` | `{userId}` when a player disconnects mid-game |
-| ← | `error` | `{code, message}` |
+| ← | `error` | `{code, message} |
+| → | `room:create` | `{mode:'bluff', category}` → bluff room (same room flow) |
+| → | `room:start` | (host only, bluff room) → room gets `bluff:start {roomId,totalRounds,writeTimeMs,voteTimeMs,players}` |
+| → | `bluff:fake` | `{text}` (write phase, ≤120 chars) → `bluff:fakes_in {round,count,total}`; all-in (or 30s timeout) → `bluff:vote` |
+| ← | `bluff:round` | `{roomId,round,totalRounds,questionId,question,writeEndsAt}` — **never the answer** |
+| ← | `bluff:vote` | `{roomId,round,options:[{id,text}],voteEndsAt}` — authorship hidden |
+| → | `bluff:vote` | `{optionId}` (not your own fake, not Detective-eliminated) → all-in (or 20s timeout) → `bluff:reveal` |
+| → | `bluff:powerup` | `{type,targetUserId?}` — `detective` (vote: privately eliminates one fake), `double_agent` (write: fake pays 2×/fool), `speed_run` (write: fake in 5s → round ×2), `swap` (write: steal a submitted fake). One use each per game. |
+| ← | `bluff:powerup_result` | private, e.g. `{type:'detective',round,eliminatedOptionId}` |
+| ← | `bluff:reveal` | `{roomId,round,correctOptionId,options:[{id,text,authorId}],votes,deltas:[{userId,delta,votedTruth,fooled}],scores}` — scoring: +100 truth pick, +50/fooled player (×2 double agent), +25 streak bonus per consecutive truth beyond the first |
+| ← | `bluff:end` | `{roomId,reason,winner,scores,titles:{userId:title},rewards[]}` — titles: Truth Hunter / Master Deceiver / Rookie Fibber / Sharp Eye / Bluff Rookie |
+| ← | `bluff:player_left` | `{userId,scores}` when a player leaves mid-bluff (<2 players ends with `forfeit`) |
 
 Questions sent over the socket are sanitized (no `answerIndex`).
 

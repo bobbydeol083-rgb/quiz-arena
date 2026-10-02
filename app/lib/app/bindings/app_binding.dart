@@ -10,6 +10,7 @@ import '../data/repositories/auth_repository.dart';
 import '../data/repositories/leaderboard_repository.dart';
 import '../data/repositories/progress_repository.dart';
 import '../data/repositories/quiz_repository.dart';
+import '../data/repositories/pack_repository.dart';
 import '../data/repositories/social_repository.dart';
 import '../modules/duel/controllers/realtime_controller.dart';
 
@@ -55,6 +56,10 @@ class InitialBinding extends Bindings {
     );
     Get.put<SocialRepository>(
       SocialRepository(api: Get.find<ApiService>()),
+      permanent: true,
+    );
+    Get.put<PackRepository>(
+      PackRepository(api: Get.find<ApiService>()),
       permanent: true,
     );
     Get.put<RealtimeController>(

@@ -138,6 +138,29 @@ class ApiService {
     _throwForStatus(res);
   }
 
+  Future<dynamic> putJson(String path,
+      {Map<String, dynamic>? body, bool auth = true}) async {
+    final res = await _send(
+      () => _client.put(
+        buildUri(path),
+        headers: _headers(auth: auth),
+        body: body == null ? null : jsonEncode(body),
+      ),
+      auth: auth,
+    );
+    if (res.statusCode >= 200 && res.statusCode < 300) return _decode(res);
+    _throwForStatus(res);
+  }
+
+  Future<dynamic> deleteJson(String path, {bool auth = true}) async {
+    final res = await _send(
+      () => _client.delete(buildUri(path), headers: _headers(auth: auth)),
+      auth: auth,
+    );
+    if (res.statusCode >= 200 && res.statusCode < 300) return _decode(res);
+    _throwForStatus(res);
+  }
+
   // ---- Auth -------------------------------------------------------------
   Future<Map<String, dynamic>> register(
       String username, String email, String password) async {
@@ -221,6 +244,72 @@ class ApiService {
   Future<Map<String, dynamic>> userProfile(String id) async {
     final json = await getJson('/users/$id');
     return Map<String, dynamic>.from(json as Map);
+  }
+
+  // ---- Game Packs (custom publishable games) -------------------------------
+  Future<Map<String, dynamic>> packsBrowse({
+    String? search,
+    String? mode,
+    String sort = 'popular',
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final query = <String, String>{
+      'sort': sort,
+      'page': '$page',
+      'limit': '$limit',
+    };
+    if (search != null && search.trim().isNotEmpty) query['search'] = search.trim();
+    if (mode != null && mode.isNotEmpty) query['mode'] = mode;
+    final json = await getJson('/packs', query: query, auth: false);
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<Map<String, dynamic>> packsMine() async {
+    final json = await getJson('/packs/mine');
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<Map<String, dynamic>> packDetail(String id) async {
+    final json = await getJson('/packs/$id');
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<Map<String, dynamic>> packCreate(Map<String, dynamic> body) async {
+    final json = await postJson('/packs', body: body);
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<Map<String, dynamic>> packUpdate(String id, Map<String, dynamic> body) async {
+    final json = await putJson('/packs/$id', body: body);
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<Map<String, dynamic>> packPublish(String id) async {
+    final json = await postJson('/packs/$id/publish');
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<Map<String, dynamic>> packUnpublish(String id) async {
+    final json = await postJson('/packs/$id/unpublish');
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<void> packDelete(String id) async {
+    await deleteJson('/packs/$id');
+  }
+
+  Future<Map<String, dynamic>> packInstall(String id) async {
+    final json = await postJson('/packs/$id/install');
+    return Map<String, dynamic>.from(json as Map);
+  }
+
+  Future<void> packPlayed(String id) async {
+    try {
+      await postJson('/packs/$id/played');
+    } catch (_) {
+      // Best-effort counter; never block the UI.
+    }
   }
 
   // ---- Social ---------------------------------------------------------------
