@@ -18,6 +18,7 @@ const { verifyToken } = require('../utils/tokens');
 const { sanitizeQuestions } = require('../utils/serialize');
 const logger = require('../utils/logger');
 const { MAX_PLAYERS } = require('../controllers/roomController');
+const { createBluffEngine } = require('./bluff');
 
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const QUESTIONS_PER_GAME = 10;
@@ -92,6 +93,19 @@ function init(io) {
   function scoresPayload(game) {
     return game.players.map((uid) => ({ userId: String(uid), ...(game.scores[uid] || { score: 0, correct: 0, answered: 0 }) }));
   }
+
+  // Bluff & Brain engine — created after the const helpers above so the
+  // context it receives is fully initialized.
+  const bluff = createBluffEngine({
+    io,
+    userSockets,
+    authed,
+    sockError,
+    sockOk,
+    publicPlayer,
+    joinRoomSocket,
+    dealQuestions,
+  });
 
   // ---- game lifecycle ---------------------------------------------------
   async function beginGame(ioRef, { code, roomId, mode, categoryId, playerIds }) {
@@ -227,10 +241,11 @@ function init(io) {
     socket.leave(`room:${code}`);
     socket.data.roomCode = null;
     try {
+      // Atomic $pull: concurrent disconnects must not clobber each other
+      // with load-filter-save races (Mongoose VersionError).
+      await Room.updateOne({ code }, { $pull: { players: new mongoose.Types.ObjectId(userId) } });
       const room = await Room.findOne({ code });
       if (room) {
-        room.players = room.players.filter((p) => String(p) !== String(userId));
-        await room.save();
         const players = await User.find({ _id: { $in: room.players } }).lean();
         ioRef.to(`room:${code}`).emit('room:update', { roomId: code, players: players.map(publicPlayer) });
       }
@@ -238,7 +253,11 @@ function init(io) {
       logger.error('leaveRoomGame room update failed', e);
     }
     const game = games.get(code);
-    if (!game) return;
+    if (!game) {
+      // Not a classic game — maybe a Bluff & Brain table.
+      await bluff.leaveBluffGame(code, userId).catch((e) => logger.error('leaveRoomGame bluff failed', e));
+      return;
+    }
     game.players = game.players.filter((p) => String(p) !== String(userId));
     delete game.scores[userId];
     delete game.answers[userId];
@@ -416,7 +435,7 @@ function init(io) {
 
     // ---- rooms --------------------------------------------------------------
     socket.on('room:create', authed(socket, async (payload, ack) => {
-      const mode = payload.mode === 'duel' ? 'duel' : 'room';
+      const mode = ['duel', 'bluff'].includes(payload.mode) ? payload.mode : 'room';
       const categoryDoc = await resolveCategory(payload.category);
       if (payload.category && !categoryDoc) {
         sockError(socket, ack, 'CATEGORY_NOT_FOUND', 'Category not found');
@@ -486,6 +505,15 @@ function init(io) {
       room.status = 'playing';
       await room.save();
       sockOk(ack, { started: true });
+      if (room.mode === 'bluff') {
+        await bluff.beginBluffGame({
+          code,
+          roomId: room._id,
+          categoryId: room.category,
+          playerIds: room.players.map(String),
+        });
+        return;
+      }
       await beginGame(io, {
         code,
         roomId: room._id,
@@ -546,9 +574,12 @@ function init(io) {
         await endGame(io, code, 'completed');
       }
     }));
+
+    // Bluff & Brain player actions (write / vote / power-ups).
+    bluff.registerBluffHandlers(socket);
   });
 
-  return { userSockets, queues, invites, games, endGame: (code, reason) => endGame(io, code, reason) };
+  return { userSockets, queues, invites, games, bluffGames: bluff.bluffGames, endGame: (code, reason) => endGame(io, code, reason) };
 }
 
 module.exports = init;

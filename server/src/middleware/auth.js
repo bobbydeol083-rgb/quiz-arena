@@ -34,4 +34,27 @@ const requireAuth = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { requireAuth, errorBody };
+// Like requireAuth, but continues anonymously when no (valid) token is
+// present. Used for endpoints that personalize for authors when logged in
+// but stay public otherwise (e.g. pack detail hides answers from guests).
+const optionalAuth = asyncHandler(async (req, res, next) => {
+  const header = req.headers.authorization || '';
+  const [scheme, token] = header.split(' ');
+  if (scheme === 'Bearer' && token) {
+    try {
+      const decoded = verifyToken(token);
+      if (decoded.type === 'access') {
+        const user = await User.findById(decoded.sub);
+        if (user) {
+          req.userId = String(user._id);
+          req.user = user;
+        }
+      }
+    } catch (e) {
+      // fall through anonymously
+    }
+  }
+  next();
+});
+
+module.exports = { requireAuth, optionalAuth, errorBody };

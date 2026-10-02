@@ -42,6 +42,7 @@ function createApp() {
   app.use('/api/users', require('./routes/users'));
   app.use('/api/players', require('./routes/players'));
   app.use('/api/rooms', require('./routes/rooms'));
+  app.use('/api/packs', require('./routes/packs'));
 
   app.use(notFound);
   app.use(errorHandler);

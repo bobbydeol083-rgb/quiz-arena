@@ -7,7 +7,7 @@ const roomSchema = new mongoose.Schema(
     code: { type: String, required: true, unique: true, uppercase: true, trim: true, minlength: 6, maxlength: 6 },
     host: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     players: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    mode: { type: String, enum: ['duel', 'room'], default: 'duel' },
+    mode: { type: String, enum: ['duel', 'room', 'bluff'], default: 'duel' },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
     status: { type: String, enum: ['waiting', 'playing', 'finished'], default: 'waiting', index: true },
     questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }],

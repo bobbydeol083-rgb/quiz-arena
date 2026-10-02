@@ -96,7 +96,7 @@ function coinsForResult({ correct, perfect = false, duelWin = false }) {
 }
 
 // Badge rules. Returns the list of badge keys newly earned (mutates user.badges).
-function awardBadges(user, { mode, correct, total, avgTimeMs, duelWin = false, streakCount = 0 }) {
+function awardBadges(user, { mode, correct, total, avgTimeMs, duelWin = false, streakCount = 0, bluffFooled = 0 }) {
   const held = new Set(user.badges || []);
   const newly = [];
   const grant = (key) => {
@@ -115,6 +115,10 @@ function awardBadges(user, { mode, correct, total, avgTimeMs, duelWin = false, s
   if (mode === 'marathon' && total >= 15) grant('marathoner');
   if (duelWin) grant('duelist');
   if ((user.stats?.correctAnswers || 0) >= 100) grant('scholar');
+  // Bluff & Brain titles ladder — persistent badges for deception craft.
+  if (mode === 'bluff' && bluffFooled >= 4) grant('fibber');
+  if (mode === 'bluff' && bluffFooled >= 10) grant('deceiver');
+  if (mode === 'bluff' && total >= 3 && correct === total) grant('truth_hunter');
 
   user.badges = Array.from(held);
   return newly;
@@ -122,7 +126,7 @@ function awardBadges(user, { mode, correct, total, avgTimeMs, duelWin = false, s
 
 // Apply a graded game result to a (mutated, not saved) user document.
 // Returns the reward summary for the API response.
-function applyGameResult(user, graded, { mode, duelWin = false, now = new Date() } = {}) {
+function applyGameResult(user, graded, { mode, duelWin = false, now = new Date(), bluffFooled = 0 } = {}) {
   const at = now instanceof Date ? now : new Date(now);
   const xpBefore = Math.max(0, user.xp || 0);
   const oldLevel = levelForXp(xpBefore);
@@ -151,6 +155,7 @@ function applyGameResult(user, graded, { mode, duelWin = false, now = new Date()
     avgTimeMs: graded.avgTimeMs,
     duelWin,
     streakCount: streak.count,
+    bluffFooled,
   });
 
   return {

@@ -58,4 +58,21 @@ function sanitizeQuestions(list) {
   return (list || []).map(sanitizeQuestion);
 }
 
-module.exports = { publicUser, sanitizeQuestion, sanitizeQuestions };
+// Pack questions: strip answerIndex unless the caller is entitled to it
+// (pack author, or an installed copy the app grades locally/offline).
+function sanitizePackQuestion(q, { includeAnswers = false } = {}) {
+  const o = typeof q.toObject === 'function' ? q.toObject() : q;
+  const out = {
+    question: o.question,
+    options: o.options,
+    explanation: o.explanation || '',
+  };
+  if (includeAnswers) out.answerIndex = o.answerIndex;
+  return out;
+}
+
+function sanitizePackQuestions(list, opts) {
+  return (list || []).map((q) => sanitizePackQuestion(q, opts));
+}
+
+module.exports = { publicUser, sanitizeQuestion, sanitizeQuestions, sanitizePackQuestion, sanitizePackQuestions };

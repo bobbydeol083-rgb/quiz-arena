@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 
-const MODES = ['solo', 'blitz', 'marathon', 'daily', 'duel', 'room'];
+const MODES = ['solo', 'blitz', 'marathon', 'daily', 'duel', 'room', 'bluff'];
 
 const gameResultSchema = new mongoose.Schema(
   {

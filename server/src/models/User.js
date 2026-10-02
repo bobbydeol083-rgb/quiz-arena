@@ -17,6 +17,9 @@ const statsSchema = new mongoose.Schema(
     correctAnswers: { type: Number, default: 0, min: 0 },
     totalAnswers: { type: Number, default: 0, min: 0 },
     bestStreak: { type: Number, default: 0, min: 0 },
+    bluffPlayed: { type: Number, default: 0, min: 0 },
+    bluffWon: { type: Number, default: 0, min: 0 },
+    bluffFooledBest: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
