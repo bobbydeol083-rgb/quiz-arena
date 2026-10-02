@@ -2,9 +2,6 @@
 
 A modern, animated, gamified quiz battle app — Flutter (GetX) + MERN backend.
 
-Your uploaded UI kit was used as **flow reference only** (home → discover → quiz → leaderboard → profile).
-The visual design is new: dark-first "midnight arena" theme, violet→cyan gradients, glassmorphism,
-and motion everywhere.
 
 ## What's inside
 
