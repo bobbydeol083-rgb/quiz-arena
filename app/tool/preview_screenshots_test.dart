@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'package:quiz_arena/app/core/theme/elite_theme.dart';
+
 import 'package:quiz_arena/app/core/theme/app_theme.dart';
 import 'package:quiz_arena/app/data/models/models.dart';
 import 'package:quiz_arena/app/data/providers/api_service.dart';
@@ -21,12 +23,32 @@ import 'package:quiz_arena/app/data/repositories/quiz_repository.dart';
 import 'package:quiz_arena/app/core/utils/badge_service.dart';
 import 'package:quiz_arena/app/modules/bluff/controllers/bluff_controller.dart';
 import 'package:quiz_arena/app/modules/bluff/views/bluff_view.dart';
+import 'package:quiz_arena/app/modules/bookmarks/views/bookmarks_view.dart';
+import 'package:quiz_arena/app/modules/contest/controllers/contest_controller.dart';
+import 'package:quiz_arena/app/modules/contest/controllers/contest_play_controller.dart';
+import 'package:quiz_arena/app/modules/contest/views/contest_detail_view.dart';
+import 'package:quiz_arena/app/modules/contest/views/contest_view.dart';
 import 'package:quiz_arena/app/modules/home/controllers/home_controller.dart';
 import 'package:quiz_arena/app/modules/home/views/home_view.dart';
 import 'package:quiz_arena/app/modules/packs/controllers/pack_editor_controller.dart';
 import 'package:quiz_arena/app/modules/packs/controllers/packs_controller.dart';
 import 'package:quiz_arena/app/modules/packs/views/pack_editor_view.dart';
 import 'package:quiz_arena/app/modules/packs/views/packs_view.dart';
+import 'package:quiz_arena/app/modules/rewards/controllers/daily_reward_controller.dart';
+import 'package:quiz_arena/app/modules/rewards/controllers/refer_earn_controller.dart';
+import 'package:quiz_arena/app/modules/rewards/views/daily_reward_view.dart';
+import 'package:quiz_arena/app/modules/rewards/views/refer_earn_view.dart';
+import 'package:quiz_arena/app/modules/statistics/controllers/statistics_controller.dart';
+import 'package:quiz_arena/app/modules/statistics/views/statistics_view.dart';
+import 'package:quiz_arena/app/modules/wallet/views/wallet_view.dart';
+import 'package:quiz_arena/app/modules/zones/controllers/exam_controller.dart';
+import 'package:quiz_arena/app/modules/zones/controllers/true_false_controller.dart';
+import 'package:quiz_arena/app/modules/zones/views/exam_view.dart';
+import 'package:quiz_arena/app/modules/zones/views/true_false_view.dart';
+import 'package:quiz_arena/app/data/repositories/bookmark_repository.dart';
+import 'package:quiz_arena/app/data/repositories/contest_repository.dart';
+import 'package:quiz_arena/app/data/repositories/rewards_repository.dart';
+import 'package:quiz_arena/app/data/services/coin_ledger.dart';
 
 const _fontDir =
     '/home/hatch/sdks/flutter/bin/cache/artifacts/material_fonts';
@@ -184,6 +206,9 @@ void main() {
     });
     await GetStorage.init();
     await _loadFonts();
+    // google_fonts can't fetch in tests (no network) — Elite widgets fall
+    // back to the bundled test font instead of throwing.
+    EliteTheme.useSystemFont = true;
     Get.testMode = true;
   });
 
@@ -357,5 +382,236 @@ void main() {
     c.questions[0].options[3].text = 'Penguins';
     await _pumpScreen(tester, const PackEditorView());
     await _golden(tester, 'pack_editor');
+  });
+
+  // ---- Elite harvest previews --------------------------------------------
+
+  ContestCard _mockContest(String id, String name, String phase,
+      {int fee = 0, bool played = false}) {
+    final now = DateTime.now();
+    return ContestCard(
+      id: id,
+      name: name,
+      description: 'Answer 10 questions. Top ranks split the prize pool.',
+      image: '',
+      startDate: now.subtract(const Duration(hours: 1)),
+      endDate: now.add(const Duration(hours: 5)),
+      entryFee: fee,
+      phase: phase,
+      prizePool: 500,
+      prizeCount: 3,
+      questionCount: 10,
+      participants: 128,
+      played: played,
+    );
+  }
+
+  testWidgets('preview: contests lobby', (tester) async {
+    _deps();
+    final c = ContestController(
+      repo: ContestRepository(api: ApiService(baseUrl: 'http://127.0.0.1:1')),
+    );
+    Get.put<ContestController>(c);
+    await _pumpScreen(tester, const ContestView());
+    c.contests.assignAll([
+      _mockContest('1', 'Sunday Showdown', 'live', fee: 50),
+      _mockContest('2', 'Morning Blitz', 'live', played: true),
+      _mockContest('3', 'Diwali Mega Contest', 'upcoming', fee: 100),
+      _mockContest('4', 'Friday Faceoff', 'ended', played: true),
+    ]);
+    c.loading.value = false;
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'contests');
+  });
+
+  testWidgets('preview: contest detail', (tester) async {
+    _deps();
+    final auth = Get.find<AuthRepository>();
+    final c = ContestPlayController(
+      repo: ContestRepository(api: ApiService(baseUrl: 'http://127.0.0.1:1')),
+      auth: auth,
+      ledger: CoinLedger(),
+      contestId: '1',
+    );
+    Get.put<ContestPlayController>(c);
+    await _pumpScreen(tester, const ContestDetailView());
+    c.detail.assignAll({
+      'name': 'Sunday Showdown',
+      'description':
+          'Ten questions, one winner takes the crown. Play once — make it count!',
+      'questionCount': 10,
+      'entryFee': 50,
+      'phase': 'live',
+      'startDate': '2026-10-05T09:00:00Z',
+      'prizes': [
+        {'rank': 1, 'coins': 300},
+        {'rank': 2, 'coins': 150},
+        {'rank': 3, 'coins': 50},
+      ],
+      'myEntry': null,
+    });
+    c.leaderboard.assignAll([
+      {'rank': 1, 'username': 'QuizWhiz', 'score': 100},
+      {'rank': 2, 'username': 'Boss', 'score': 90},
+      {'rank': 3, 'username': 'TriviaTitan', 'score': 80},
+    ]);
+    c.loading.value = false;
+    c.error.value = '';
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'contest_detail');
+  });
+
+  testWidgets('preview: daily scratch reward', (tester) async {
+    _deps();
+    final auth = Get.find<AuthRepository>();
+    final c = DailyRewardController(
+      rewards:
+          RewardsRepository(api: ApiService(baseUrl: 'http://127.0.0.1:1')),
+      auth: auth,
+      ledger: CoinLedger(),
+    );
+    Get.put<DailyRewardController>(c);
+    await _pumpScreen(tester, const DailyRewardView());
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'daily_reward');
+  });
+
+  testWidgets('preview: refer and earn', (tester) async {
+    _deps();
+    final c = ReferEarnController(
+      rewards:
+          RewardsRepository(api: ApiService(baseUrl: 'http://127.0.0.1:1')),
+    );
+    Get.put<ReferEarnController>(c);
+    await _pumpScreen(tester, const ReferEarnView());
+    c.code.value = 'BOSS42';
+    c.referredCount.value = 3;
+    c.earnedCoins.value = 300;
+    c.loading.value = false;
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'refer_earn');
+  });
+
+  testWidgets('preview: true false zone', (tester) async {
+    _deps();
+    final auth = Get.find<AuthRepository>();
+    final badges = BadgeService();
+    Get.put<BadgeService>(badges);
+    final progressRepo = ProgressRepository(badges: badges);
+    Get.put<ProgressRepository>(progressRepo);
+    final c = TrueFalseController(
+      auth: auth,
+      progress: progressRepo,
+      ledger: CoinLedger(),
+    );
+    Get.put<TrueFalseController>(c);
+    await _pumpScreen(tester, const TrueFalseView());
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'true_false');
+    Get.delete<TrueFalseController>(force: true);
+  });
+
+  testWidgets('preview: exam mode', (tester) async {
+    _deps();
+    final auth = Get.find<AuthRepository>();
+    final badges = BadgeService();
+    Get.put<BadgeService>(badges);
+    final progressRepo = ProgressRepository(badges: badges);
+    Get.put<ProgressRepository>(progressRepo);
+    final c = ExamController(
+      bank: LocalQuestionBank(),
+      auth: auth,
+      progress: progressRepo,
+      ledger: CoinLedger(),
+    );
+    Get.put<ExamController>(c);
+    await _pumpScreen(tester, const ExamView());
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'exam');
+    Get.delete<ExamController>(force: true);
+  });
+
+  testWidgets('preview: statistics', (tester) async {
+    _deps();
+    final auth = Get.find<AuthRepository>();
+    auth.currentUser.value = const AppUser(
+      id: 'local-demo',
+      username: 'Boss',
+      email: 'boss@example.com',
+      xp: 2450,
+      level: 6,
+      coins: 820,
+      streak: 12,
+    );
+    final badges = BadgeService();
+    Get.put<BadgeService>(badges);
+    final progressRepo = ProgressRepository(badges: badges);
+    progressRepo.progress.value = const PlayerProgress(
+      totalQuizzes: 48,
+      wins: 31,
+      totalAnswered: 512,
+      totalCorrect: 389,
+      bestStreak: 14,
+      perfectGames: 6,
+      duelsWon: 18,
+      dailyStreak: 12,
+    );
+    Get.put<ProgressRepository>(progressRepo);
+    final c = StatisticsController(
+      progress: progressRepo,
+      auth: auth,
+    );
+    Get.put<StatisticsController>(c);
+    await _pumpScreen(tester, const StatisticsView());
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'statistics');
+  });
+
+  testWidgets('preview: wallet', (tester) async {
+    _deps();
+    final auth = Get.find<AuthRepository>();
+    auth.currentUser.value = const AppUser(
+      id: 'local-demo',
+      username: 'Boss',
+      email: 'boss@example.com',
+      xp: 2450,
+      level: 6,
+      coins: 820,
+      streak: 12,
+    );
+    final ledger = CoinLedger();
+    Get.put<CoinLedger>(ledger);
+    await ledger.record(100, 'Daily scratch reward');
+    await ledger.record(50, 'True/False zone');
+    await ledger.record(-50, 'Contest entry: Sunday Showdown');
+    await _pumpScreen(tester, const WalletView());
+    await tester.pump(const Duration(milliseconds: 800));
+    await _golden(tester, 'wallet');
+  });
+
+  testWidgets('preview: bookmarks', (tester) async {
+    _deps();
+    final repo = BookmarkRepository();
+    Get.put<BookmarkRepository>(repo);
+    await repo.toggle(const Question(
+      id: 'q1',
+      category: 'Science',
+      difficulty: 'medium',
+      question: 'What is the chemical symbol for gold?',
+      options: ['Au', 'Ag', 'Gd', 'Go'],
+      answerIndex: 0,
+      explanation: 'Au comes from the Latin aurum.',
+    ));
+    await repo.toggle(const Question(
+      id: 'q2',
+      category: 'History',
+      difficulty: 'hard',
+      question: 'In which year did the Berlin Wall fall?',
+      options: ['1987', '1989', '1991', '1985'],
+      answerIndex: 1,
+    ));
+    await _pumpScreen(tester, const BookmarksView());
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'bookmarks');
   });
 }
