@@ -24,6 +24,13 @@ class Routes {
   static const String packs = '/packs';
   static const String packEditor = '/pack-editor';
   static const String bluff = '/bluff';
+  static const String dailyReward = '/daily-reward';
+  static const String referEarn = '/refer-earn';
+  static const String trueFalse = '/true-false';
+  static const String exam = '/exam';
+  static const String statistics = '/statistics';
+  static const String wallet = '/wallet';
+  static const String bookmarks = '/bookmarks';
 
   /// Bottom-nav tabs (order matters for the sliding indicator).
   static const List<String> tabs = [home, discover, leaderboard, profile];

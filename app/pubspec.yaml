@@ -27,6 +27,10 @@ dependencies:
   confetti: ^0.7.0
   shimmer: ^3.0.0
   percent_indicator: ^4.2.3
+  flutter_svg: ^2.0.10
+  lottie: ^3.1.3
+  scratcher: ^2.2.0
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
@@ -38,3 +42,5 @@ flutter:
 
   assets:
     - assets/questions.json
+    - assets/true_false.json
+    - assets/elite/

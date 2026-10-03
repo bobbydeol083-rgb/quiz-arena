@@ -84,9 +84,10 @@ class AuthRepository extends GetxService {
   }
 
   Future<AppUser> register(
-      String username, String email, String password) async {
-    final json =
-        await api.register(username.trim(), email.trim(), password);
+      String username, String email, String password,
+      {String? referralCode}) async {
+    final json = await api.register(username.trim(), email.trim(), password,
+        referralCode: referralCode?.trim());
     return _persistSession(json);
   }
 
@@ -131,6 +132,16 @@ class AuthRepository extends GetxService {
       coins: user.coins + result.coinsEarned,
       streak: result.streak,
     );
+    currentUser.value = updated;
+    await box.write(AppConfig.kUser, updated.toJson());
+  }
+
+  /// Credit coins from rewards (daily scratch, referrals). Syncs the local
+  /// profile immediately; the server is the source of truth on next refresh.
+  Future<void> addCoins(int amount) async {
+    final user = currentUser.value;
+    if (user == null || amount <= 0) return;
+    final updated = user.copyWith(coins: user.coins + amount);
     currentUser.value = updated;
     await box.write(AppConfig.kUser, updated.toJson());
   }

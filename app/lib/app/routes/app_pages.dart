@@ -36,6 +36,16 @@ import '../modules/bluff/bindings/bluff_binding.dart';
 import '../modules/bluff/views/bluff_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
+import '../modules/rewards/bindings/rewards_binding.dart';
+import '../modules/rewards/views/daily_reward_view.dart';
+import '../modules/rewards/views/refer_earn_view.dart';
+import '../modules/zones/bindings/zones_binding.dart';
+import '../modules/zones/views/true_false_view.dart';
+import '../modules/zones/views/exam_view.dart';
+import '../modules/statistics/bindings/statistics_binding.dart';
+import '../modules/statistics/views/statistics_view.dart';
+import '../modules/wallet/views/wallet_view.dart';
+import '../modules/bookmarks/views/bookmarks_view.dart';
 
 /// Named route table. Every page uses the signature Arena transition
 /// (fade + scale + slight slide); the four bottom-nav tabs use the faster
@@ -167,6 +177,53 @@ class AppPages {
       name: Routes.bluff,
       page: () => const BluffView(),
       binding: BluffBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.dailyReward,
+      page: () => const DailyRewardView(),
+      binding: DailyRewardBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.referEarn,
+      page: () => const ReferEarnView(),
+      binding: ReferEarnBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.trueFalse,
+      page: () => const TrueFalseView(),
+      binding: TrueFalseBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.exam,
+      page: () => const ExamView(),
+      binding: ExamBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.statistics,
+      page: () => const StatisticsView(),
+      binding: StatisticsBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.wallet,
+      page: () => const WalletView(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.bookmarks,
+      page: () => const BookmarksView(),
       customTransition: ArenaPageTransition(),
       transitionDuration: const Duration(milliseconds: 350),
     ),

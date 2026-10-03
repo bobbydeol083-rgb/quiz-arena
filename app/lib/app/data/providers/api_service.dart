@@ -163,12 +163,15 @@ class ApiService {
 
   // ---- Auth -------------------------------------------------------------
   Future<Map<String, dynamic>> register(
-      String username, String email, String password) async {
+      String username, String email, String password,
+      {String? referralCode}) async {
     final json =
         await postJson('/auth/register', auth: false, body: {
       'username': username,
       'email': email,
       'password': password,
+      if (referralCode != null && referralCode.isNotEmpty)
+        'referralCode': referralCode,
     });
     return Map<String, dynamic>.from(json as Map);
   }

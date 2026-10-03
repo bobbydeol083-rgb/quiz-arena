@@ -7,11 +7,13 @@ import '../data/providers/api_service.dart';
 import '../data/providers/local_question_bank.dart';
 import '../data/providers/socket_service.dart';
 import '../data/repositories/auth_repository.dart';
+import '../data/repositories/bookmark_repository.dart';
 import '../data/repositories/leaderboard_repository.dart';
 import '../data/repositories/progress_repository.dart';
 import '../data/repositories/quiz_repository.dart';
 import '../data/repositories/pack_repository.dart';
 import '../data/repositories/social_repository.dart';
+import '../data/services/coin_ledger.dart';
 import '../modules/duel/controllers/realtime_controller.dart';
 
 /// Root dependency graph, registered once at app start.
@@ -28,6 +30,8 @@ class InitialBinding extends Bindings {
     Get.put<LocalQuestionBank>(LocalQuestionBank(), permanent: true);
     Get.put<SocketService>(SocketService(), permanent: true);
     Get.put<BadgeService>(BadgeService(), permanent: true);
+    Get.put<CoinLedger>(CoinLedger(), permanent: true);
+    Get.put<BookmarkRepository>(BookmarkRepository(), permanent: true);
     // NOTE: ThemeController is registered in main() before runApp so the
     // root widget can observe it from the first frame.
 
