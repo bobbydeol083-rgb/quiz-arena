@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-import 'package:quiz_arena/app/core/theme/app_theme.dart';
-import 'package:quiz_arena/app/core/values/app_values.dart';
+import 'package:quiz_arena/app/core/theme/elite_theme.dart';
+import 'package:quiz_arena/app/core/theme/elite_widgets.dart';
 import 'package:quiz_arena/app/core/values/elite_assets.dart';
-import 'package:quiz_arena/app/core/widgets/widgets.dart';
 import 'package:quiz_arena/app/data/repositories/auth_repository.dart';
 import 'package:quiz_arena/app/data/repositories/contest_repository.dart';
 import 'package:quiz_arena/app/data/providers/api_service.dart';
@@ -14,106 +14,86 @@ import 'package:quiz_arena/app/routes/app_routes.dart';
 String _fmtDate(DateTime d) =>
     '${d.day}/${d.month}/${d.year} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
-/// Coin wallet: balance, earn paths, transaction history.
+/// Coin wallet — Elite Quiz UI: pink balance header, white earn tiles,
+/// transaction history list.
 class WalletView extends StatelessWidget {
   const WalletView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final auth = Get.find<AuthRepository>();
     final ledger = Get.find<CoinLedger>();
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ArenaBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: AppInsets.screen,
-                child: Row(
-                  children: [
-                    ArenaIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      onPressed: Get.back,
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Text('Wallet', style: text.titleLarge),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: AppInsets.screen,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _balanceCard(context, text, auth),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text('Earn coins', style: text.titleMedium),
-                      const SizedBox(height: AppSpacing.sm),
-                      _earnTile(
-                        context,
-                        text,
-                        EliteAssets.dailyCoins,
-                        'Daily scratch card',
-                        'Scratch once a day for up to 100 coins',
-                        () => Get.toNamed(Routes.dailyReward),
-                      ),
-                      _earnTile(
-                        context,
-                        text,
-                        EliteAssets.referEarn,
-                        'Refer & earn',
-                        '100 coins per friend who joins',
-                        () => Get.toNamed(Routes.referEarn),
-                      ),
-                      _earnTile(
-                        context,
-                        text,
-                        EliteAssets.trueFalse,
-                        'True / False zone',
-                        'Fast rounds, coin rewards',
-                        () => Get.toNamed(Routes.trueFalse),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text('History', style: text.titleMedium),
-                      const SizedBox(height: AppSpacing.sm),
-                      _history(context, text, ledger),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+      backgroundColor: EliteTheme.pageBg,
+      appBar: const EliteAppBar(title: 'Wallet'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _balanceCard(auth),
+            const SizedBox(height: 20),
+            Text('Earn coins',
+                style:
+                    eliteText(size: 18, weight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            _earnTile(
+              EliteAssets.dailyCoins,
+              'Daily scratch card',
+              'Scratch once a day for up to 100 coins',
+              () => Get.toNamed(Routes.dailyReward),
+            ),
+            _earnTile(
+              EliteAssets.referEarn,
+              'Refer & earn',
+              '100 coins per friend who joins',
+              () => Get.toNamed(Routes.referEarn),
+            ),
+            _earnTile(
+              EliteAssets.trueFalse,
+              'True / False zone',
+              'Fast rounds, coin rewards',
+              () => Get.toNamed(Routes.trueFalse),
+            ),
+            const SizedBox(height: 20),
+            Text('History',
+                style:
+                    eliteText(size: 18, weight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            _history(ledger),
+          ],
         ),
       ),
     );
   }
 
-  Widget _balanceCard(
-      BuildContext context, TextTheme text, AuthRepository auth) {
+  Widget _balanceCard(AuthRepository auth) {
     return Container(
-      padding: AppInsets.card,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: AppGradients.sunny,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        color: EliteTheme.primary,
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
         children: [
-          EliteAssets.svg(EliteAssets.wallet, size: 56),
-          const SizedBox(width: AppSpacing.md),
+          SvgPicture.asset(EliteAssets.wallet,
+              width: 56, height: 56),
+          const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'COIN BALANCE',
-                style: text.labelLarge?.copyWith(color: Colors.white70),
-              ),
+              Text('COIN BALANCE',
+                  style: eliteText(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color:
+                          Colors.white.withValues(alpha: 0.8))),
               Obx(() => Text(
                     '${auth.currentUser.value?.coins ?? 0}',
-                    style: text.displaySmall
-                        ?.copyWith(color: Colors.white),
+                    style: eliteText(
+                        size: 36,
+                        weight: FontWeight.w800,
+                        color: Colors.white),
                   )),
             ],
           ),
@@ -122,32 +102,39 @@ class WalletView extends StatelessWidget {
     );
   }
 
-  Widget _earnTile(BuildContext context, TextTheme text, String icon,
-      String title, String subtitle, VoidCallback onTap) {
+  Widget _earnTile(String icon, String title, String subtitle,
+      VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         onTap: onTap,
-        child: GlassCard(
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
           child: Row(
             children: [
-              EliteAssets.svg(icon, size: 40),
-              const SizedBox(width: AppSpacing.md),
+              SvgPicture.asset(icon, width: 40, height: 40),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: text.titleMedium),
-                    Text(
-                      subtitle,
-                      style: text.bodySmall?.copyWith(
-                        color: AppColors.textSecondaryOf(context),
-                      ),
-                    ),
+                    Text(title,
+                        style: eliteText(
+                            size: 16, weight: FontWeight.bold)),
+                    Text(subtitle,
+                        style: eliteText(
+                            size: 13,
+                            color: EliteTheme.primaryText.withValues(
+                                alpha: 0.7))),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded),
+              const Icon(Icons.chevron_right_rounded,
+                  color: EliteTheme.primaryText),
             ],
           ),
         ),
@@ -155,48 +142,40 @@ class WalletView extends StatelessWidget {
     );
   }
 
-  Widget _history(
-      BuildContext context, TextTheme text, CoinLedger ledger) {
+  Widget _history(CoinLedger ledger) {
     return FutureBuilder<Map<String, dynamic>>(
       future: _serverTransactions(),
       builder: (context, snap) {
         final server = snap.data?['transactions'] as List?;
         if (server != null && server.isNotEmpty) {
-          return _txList(
-            context,
-            text,
-            server.map((e) => Map<String, dynamic>.from(e as Map)).toList(),
-          );
+          return _txList(server
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList());
         }
-        // Offline / not logged in: fall back to the local ledger.
         final entries = ledger.entries();
         if (entries.isEmpty) {
-          return GlassCard(
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Center(
-              child: Padding(
-                padding: AppInsets.card,
-                child: Text(
-                  'No transactions yet.\nEarn your first coins above!',
-                  style: text.bodyMedium?.copyWith(
-                    color: AppColors.textSecondaryOf(context),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+              child: Text(
+                'No transactions yet.\nEarn your first coins above!',
+                style: eliteText(size: 14),
+                textAlign: TextAlign.center,
               ),
             ),
           );
         }
-        return _txList(
-          context,
-          text,
-          entries
-              .map((e) => {
-                    'amount': e.amount,
-                    'reason': e.reason,
-                    'createdAt': e.at.toIso8601String(),
-                  })
-              .toList(),
-        );
+        return _txList(entries
+            .map((e) => {
+                  'amount': e.amount,
+                  'reason': e.reason,
+                  'createdAt': e.at.toIso8601String(),
+                })
+            .toList());
       },
     );
   }
@@ -212,42 +191,49 @@ class WalletView extends StatelessWidget {
     }
   }
 
-  Widget _txList(BuildContext context, TextTheme text,
-      List<Map<String, dynamic>> txs) {
-    return GlassCard(
+  Widget _txList(List<Map<String, dynamic>> txs) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Column(
         children: [
           for (var i = 0; i < txs.length && i < 20; i++)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
-                  EliteAssets.svg(
+                  SvgPicture.asset(
                       (txs[i]['amount'] as num? ?? 0) >= 0
                           ? EliteAssets.earnedCoin
                           : EliteAssets.coin,
-                      size: 28),
-                  const SizedBox(width: AppSpacing.sm),
+                      width: 28,
+                      height: 28),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('${txs[i]['reason'] ?? ''}',
-                            style: text.bodyMedium),
+                            style: eliteText(
+                                size: 14,
+                                weight: FontWeight.w600)),
                         Text(
                           _fmtDate(DateTime.tryParse(
                                   '${txs[i]['createdAt'] ?? ''}') ??
                               DateTime.now()),
-                          style: text.bodySmall?.copyWith(
-                            color:
-                                AppColors.textSecondaryOf(context),
-                          ),
+                          style: eliteText(
+                              size: 12,
+                              color: EliteTheme.primaryText.withValues(
+                                  alpha: 0.7)),
                         ),
                       ],
                     ),
                   ),
-                  _amountText(text,
-                      (txs[i]['amount'] as num?)?.toInt() ?? 0, context),
+                  _amountText(
+                      (txs[i]['amount'] as num?)?.toInt() ?? 0),
                 ],
               ),
             ),
@@ -256,13 +242,14 @@ class WalletView extends StatelessWidget {
     );
   }
 
-  Widget _amountText(TextTheme text, int amount, BuildContext context) {
+  Widget _amountText(int amount) {
     final positive = amount >= 0;
     return Text(
       '${positive ? '+' : ''}$amount',
-      style: text.titleMedium?.copyWith(
-        color: positive ? AppColors.successOf(context) : AppColors.error,
-        fontWeight: FontWeight.w800,
+      style: eliteText(
+        size: 16,
+        weight: FontWeight.w800,
+        color: positive ? EliteTheme.correct : EliteTheme.wrong,
       ),
     );
   }
