@@ -10,6 +10,7 @@ import '../../../data/models/models.dart';
 import '../../../data/providers/api_service.dart';
 import '../../../data/providers/socket_service.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repositories/bookmark_repository.dart';
 import '../../../data/repositories/progress_repository.dart';
 import '../../../data/repositories/quiz_repository.dart';
 import '../../../routes/app_routes.dart';
@@ -119,6 +120,15 @@ class QuizController extends GetxController {
     required this.socket,
     QuizArgs? args,
   }) : _injectedArgs = args;
+
+  /// Bumped whenever bookmarks change so the app-bar icon rebuilds.
+  final RxInt bookmarkTick = 0.obs;
+
+  Future<void> toggleBookmark() async {
+    if (!Get.isRegistered<BookmarkRepository>()) return;
+    await Get.find<BookmarkRepository>().toggle(currentQuestion);
+    bookmarkTick.value++;
+  }
 
   // ---- Configuration ------------------------------------------------------
   late final QuizMode mode;

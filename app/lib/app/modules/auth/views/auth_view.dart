@@ -208,6 +208,22 @@ class AuthView extends GetView<AuthController> {
         ),
       ),
     ]);
+    if (!isLogin) {
+      fields.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: FadeSlideIn(
+            index: i + 1,
+            child: _field(
+              controller: controller.referralCode,
+              hint: 'Referral code (optional)',
+              icon: Icons.card_giftcard_rounded,
+              keyboardType: TextInputType.text,
+            ),
+          ),
+        ),
+      );
+    }
     return Column(
       children: fields
           .map(

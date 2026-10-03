@@ -4,8 +4,10 @@ import 'package:quiz_arena/app/core/theme/app_theme.dart';
 import 'package:quiz_arena/app/core/utils/formatters.dart';
 import 'package:quiz_arena/app/core/utils/level_config.dart';
 import 'package:quiz_arena/app/core/values/app_values.dart';
+import 'package:quiz_arena/app/core/values/elite_assets.dart';
 import 'package:quiz_arena/app/core/widgets/widgets.dart';
 import 'package:quiz_arena/app/data/models/models.dart';
+import 'package:quiz_arena/app/routes/app_routes.dart';
 
 import '../controllers/profile_controller.dart';
 
@@ -37,6 +39,12 @@ class ProfileView extends GetView<ProfileController> {
               padding:
                   const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: _quickStats(user, progress),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: _quickLinks(context),
             ),
             const SizedBox(height: AppSpacing.md),
             Padding(
@@ -153,8 +161,7 @@ class ProfileView extends GetView<ProfileController> {
     );
   }
 
-  Widget _quickStat(String label, String value) => Expanded(
-        child: Column(
+  Widget _quickStat(String label, String value) => Expanded(        child: Column(
           children: [
             Text(
               value,
@@ -177,6 +184,59 @@ class ProfileView extends GetView<ProfileController> {
           ],
         ),
       );
+
+  /// Quick links to wallet, statistics and bookmarks.
+  Widget _quickLinks(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _linkTile(
+            context,
+            EliteAssets.wallet,
+            'Wallet',
+            Routes.wallet,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _linkTile(
+            context,
+            EliteAssets.statistics,
+            'Statistics',
+            Routes.statistics,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _linkTile(
+            context,
+            EliteAssets.bookmark,
+            'Bookmarks',
+            Routes.bookmarks,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _linkTile(
+      BuildContext context, String icon, String label, String route) {
+    final text = Theme.of(context).textTheme;
+    return GlassCard(
+      onTap: () => Get.toNamed(route),
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.md,
+        horizontal: AppSpacing.sm,
+      ),
+      child: Column(
+        children: [
+          EliteAssets.svg(icon, size: 30),
+          const SizedBox(height: AppSpacing.xs),
+          Text(label, style: text.labelLarge),
+        ],
+      ),
+    );
+  }
 
   /// Badge shelf: unlocked badges in color, locked ones greyed with 🔒.
   Widget _badgesTab() {

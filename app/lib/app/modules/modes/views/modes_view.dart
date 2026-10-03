@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiz_arena/app/core/theme/app_theme.dart';
 import 'package:quiz_arena/app/core/values/app_values.dart';
+import 'package:quiz_arena/app/core/values/elite_assets.dart';
 import 'package:quiz_arena/app/core/widgets/widgets.dart';
 import 'package:quiz_arena/app/modules/modes/controllers/modes_controller.dart';
 import 'package:quiz_arena/app/modules/quiz/controllers/quiz_controller.dart';
@@ -48,6 +49,11 @@ class ModesView extends GetView<ModesController> {
               FadeSlideIn(
                 index: controller.modes.length + 1,
                 child: _PacksCard(),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FadeSlideIn(
+                index: controller.modes.length + 2,
+                child: _ZonesSection(),
               ),
             ],
           ),
@@ -291,6 +297,92 @@ class _PacksCard extends StatelessWidget {
           ),
           const Icon(Icons.chevron_right_rounded),
         ],
+      ),
+    );
+  }
+}
+
+/// New zones & rewards harvested from the Elite Quiz pack.
+class _ZonesSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Zones & rewards', style: text.titleMedium),
+        const SizedBox(height: AppSpacing.sm),
+        const _ZoneTile(
+          icon: EliteAssets.trueFalse,
+          title: 'True / False',
+          subtitle: '10 rapid-fire statements, 10s each',
+          route: Routes.trueFalse,
+        ),
+        const _ZoneTile(
+          icon: EliteAssets.exam,
+          title: 'Exam mode',
+          subtitle: '20 questions, 20 minutes, graded A+ to F',
+          route: Routes.exam,
+        ),
+        const _ZoneTile(
+          icon: EliteAssets.dailyCoins,
+          title: 'Daily scratch card',
+          subtitle: 'Scratch once a day, win up to 100 coins',
+          route: Routes.dailyReward,
+        ),
+        const _ZoneTile(
+          icon: EliteAssets.referEarn,
+          title: 'Refer & earn',
+          subtitle: '100 coins for every friend who joins',
+          route: Routes.referEarn,
+        ),
+      ],
+    );
+  }
+}
+
+class _ZoneTile extends StatelessWidget {
+  final String icon;
+  final String title;
+  final String subtitle;
+  final String route;
+
+  const _ZoneTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.route,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: GlassCard(
+        onTap: () => Get.toNamed(route),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            EliteAssets.svg(icon, size: 44),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: text.titleMedium),
+                  Text(
+                    subtitle,
+                    style: text.bodySmall?.copyWith(
+                      color: AppColors.textSecondaryOf(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
       ),
     );
   }

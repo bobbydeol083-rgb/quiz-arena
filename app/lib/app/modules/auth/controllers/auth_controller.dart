@@ -18,6 +18,7 @@ class AuthController extends GetxController {
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
   final TextEditingController username = TextEditingController();
+  final TextEditingController referralCode = TextEditingController();
 
   final RxBool isLoading = false.obs;
   final RxString error = ''.obs;
@@ -61,7 +62,10 @@ class AuthController extends GetxController {
     isLoading.value = true;
     error.value = '';
     try {
-      await auth.register(name, address, pass);
+      await auth.register(name, address, pass,
+          referralCode: referralCode.text.trim().isEmpty
+              ? null
+              : referralCode.text.trim());
       Get.offAllNamed(Routes.home);
     } on ApiException catch (e) {
       error.value = e.message;
@@ -85,6 +89,7 @@ class AuthController extends GetxController {
     email.dispose();
     password.dispose();
     username.dispose();
+    referralCode.dispose();
     super.onClose();
   }
 }

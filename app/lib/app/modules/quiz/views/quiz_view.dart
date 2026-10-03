@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 
 import 'package:quiz_arena/app/core/theme/app_theme.dart';
+import 'package:quiz_arena/app/data/repositories/bookmark_repository.dart';
 import 'package:quiz_arena/app/core/utils/formatters.dart';
 import 'package:quiz_arena/app/core/values/app_values.dart';
 import 'package:quiz_arena/app/core/widgets/widgets.dart';
@@ -26,6 +27,22 @@ class QuizView extends GetView<QuizController> {
         ),
         title: Text(controller.mode.title),
         actions: [
+          Obx(() {
+            final marked = Get.isRegistered<BookmarkRepository>()
+                ? Get.find<BookmarkRepository>()
+                    .isBookmarked(controller.currentQuestion.id)
+                : false;
+            // Rebuild on bookmark changes via a simple version counter.
+            controller.bookmarkTick.value;
+            return IconButton(
+              tooltip: marked ? 'Remove bookmark' : 'Bookmark question',
+              icon: Icon(
+                marked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
+                color: marked ? AppColors.sun : null,
+              ),
+              onPressed: () => controller.toggleBookmark(),
+            );
+          }),
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Obx(
