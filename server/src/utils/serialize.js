@@ -26,6 +26,7 @@ function publicUser(user, { includeEmail = false, includeStats = false } = {}) {
     lastSeen: u.lastSeen || null,
   };
   if (includeEmail) out.email = u.email;
+  if (includeEmail && u.referralCode) out.referralCode = u.referralCode;
   if (includeStats) {
     out.stats = {
       played: u.stats?.played || 0,

@@ -21,8 +21,30 @@ function authPayload(user, token, refreshToken) {
   return { token, refreshToken, user: publicUser(user, { includeEmail: true, includeStats: true }) };
 }
 
+/// 6-char unambiguous referral code (no 0/O/1/I).
+function makeReferralCode() {
+  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return code;
+}
+
+async function uniqueReferralCode() {
+  for (let i = 0; i < 10; i++) {
+    const code = makeReferralCode();
+    if (!(await User.exists({ referralCode: code }))) return code;
+  }
+  // Astronomically unlikely; fall back to a timestamp-suffixed code.
+  return `QA${Date.now().toString(36).toUpperCase().slice(-4)}`;
+}
+
+const REFERRER_REWARD = 100;
+const REFEREE_REWARD = 50;
+
 const register = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, referralCode } = req.body;
   const normalizedEmail = String(email).toLowerCase();
 
   if (await User.findOne({ email: normalizedEmail })) {
@@ -33,7 +55,28 @@ const register = asyncHandler(async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, env.bcryptRounds);
-  const user = await User.create({ username, email: normalizedEmail, passwordHash });
+  const user = await User.create({
+    username,
+    email: normalizedEmail,
+    passwordHash,
+    referralCode: await uniqueReferralCode(),
+  });
+
+  // Refer & earn: credit both sides when a valid code was supplied.
+  if (referralCode) {
+    const referrer = await User.findOne({
+      referralCode: String(referralCode).trim().toUpperCase(),
+    });
+    if (referrer && String(referrer._id) !== String(user._id)) {
+      referrer.coins += REFERRER_REWARD;
+      referrer.referralCount += 1;
+      await referrer.save();
+      user.coins += REFEREE_REWARD;
+      user.referredBy = referrer._id;
+      await user.save();
+    }
+  }
+
   const { token, refreshToken } = await issueTokenPair(user);
   res.status(201).json(authPayload(user, token, refreshToken));
 });

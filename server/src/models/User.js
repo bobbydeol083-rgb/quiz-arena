@@ -48,6 +48,12 @@ const userSchema = new mongoose.Schema(
     xp: { type: Number, default: 0, min: 0 },
     level: { type: Number, default: 1, min: 1, max: 8 },
     coins: { type: Number, default: 0, min: 0 },
+    // Refer & earn.
+    referralCode: { type: String, unique: true, sparse: true, trim: true, uppercase: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    referralCount: { type: Number, default: 0, min: 0 },
+    // Daily scratch reward: yyyy-MM-dd of the last claim (server-authoritative).
+    lastDailyClaim: { type: String, default: null },
     streak: { type: streakSchema, default: () => ({}) },
     badges: { type: [String], default: [] },
     location: {

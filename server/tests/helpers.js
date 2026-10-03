@@ -11,10 +11,10 @@ function unique(suffix) {
   return `${suffix}_${Date.now()}_${counter}`;
 }
 
-async function registerUser({ username, email, password = 'Password123!' } = {}) {
+async function registerUser({ username, email, password = 'Password123!', referralCode } = {}) {
   const res = await request(app)
     .post('/api/auth/register')
-    .send({ username: username || unique('user'), email: email || `${unique('u')}@example.com`, password });
+    .send({ username: username || unique('user'), email: email || `${unique('u')}@example.com`, password, referralCode });
   if (res.status !== 201) throw new Error(`register failed: ${res.status} ${JSON.stringify(res.body)}`);
   return res.body; // { token, refreshToken, user }
 }
