@@ -12,11 +12,17 @@ import 'package:get_storage/get_storage.dart';
 import 'package:quiz_arena/app/core/theme/app_theme.dart';
 import 'package:quiz_arena/app/data/models/models.dart';
 import 'package:quiz_arena/app/data/providers/api_service.dart';
+import 'package:quiz_arena/app/data/providers/local_question_bank.dart';
 import 'package:quiz_arena/app/data/providers/socket_service.dart';
 import 'package:quiz_arena/app/data/repositories/auth_repository.dart';
 import 'package:quiz_arena/app/data/repositories/pack_repository.dart';
+import 'package:quiz_arena/app/data/repositories/progress_repository.dart';
+import 'package:quiz_arena/app/data/repositories/quiz_repository.dart';
+import 'package:quiz_arena/app/core/utils/badge_service.dart';
 import 'package:quiz_arena/app/modules/bluff/controllers/bluff_controller.dart';
 import 'package:quiz_arena/app/modules/bluff/views/bluff_view.dart';
+import 'package:quiz_arena/app/modules/home/controllers/home_controller.dart';
+import 'package:quiz_arena/app/modules/home/views/home_view.dart';
 import 'package:quiz_arena/app/modules/packs/controllers/pack_editor_controller.dart';
 import 'package:quiz_arena/app/modules/packs/controllers/packs_controller.dart';
 import 'package:quiz_arena/app/modules/packs/views/pack_editor_view.dart';
@@ -182,6 +188,42 @@ void main() {
   });
 
   tearDown(() => Get.reset());
+
+  testWidgets('preview: home', (tester) async {
+    _deps();
+    final api = ApiService(baseUrl: 'http://127.0.0.1:1');
+    final auth = Get.find<AuthRepository>();
+    auth.currentUser.value = const AppUser(
+      id: 'local-demo',
+      username: 'Boss',
+      email: 'boss@example.com',
+      xp: 1250,
+      level: 4,
+      coins: 350,
+      streak: 6,
+    );
+    final quizRepo = QuizRepository(
+      api: api,
+      bank: LocalQuestionBank(),
+      auth: auth,
+    );
+    final badges = BadgeService();
+    Get.put<BadgeService>(badges);
+    final progressRepo = ProgressRepository(badges: badges);
+    Get.put<ProgressRepository>(progressRepo);
+    final c = HomeController(
+      quizRepo: quizRepo,
+      auth: auth,
+      progressRepo: progressRepo,
+    );
+    Get.put<HomeController>(c);
+    await _pumpScreen(tester, const HomeView());
+    // Network is unreachable in tests -> repo falls back to the bundled
+    // bank and flags offline; hide the chip for a clean preview.
+    c.offline.value = false;
+    await tester.pump(const Duration(milliseconds: 400));
+    await _golden(tester, 'home');
+  });
 
   testWidgets('preview: bluff write phase', (tester) async {
     _deps();

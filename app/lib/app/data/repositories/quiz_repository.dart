@@ -32,11 +32,10 @@ class QuizRepository {
       offline.value = false;
       return list.map(QuizCategory.fromJson).toList();
     } on ApiException catch (e) {
-      if (e.isNetworkError) {
-        offline.value = true;
-        return QuizCategory.localDefaults();
-      }
-      rethrow;
+      // Any backend failure (not just network loss) falls back to the
+      // bundled bank — the home screen must never break on API errors.
+      offline.value = e.isNetworkError;
+      return QuizCategory.localDefaults();
     }
   }
 

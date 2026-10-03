@@ -175,7 +175,8 @@ class HomeView extends GetView<HomeController> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(mode.emoji,
-                      style: const TextStyle(fontSize: 34)),
+                      style:
+                          const TextStyle(fontSize: 34, height: 1.0)),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     label,
