@@ -27,8 +27,8 @@ class CategoriesView extends GetView<CategoriesController> {
           bottom: false,
           child: RefreshIndicator(
             onRefresh: controller.refreshAll,
-            color: AppColors.violet,
-            backgroundColor: AppColors.surfaceElevated,
+            color: AppColors.blue,
+            backgroundColor: AppColors.elevatedOf(context),
             child: Obx(() {
               if (controller.isLoading.value) {
                 return ListView(

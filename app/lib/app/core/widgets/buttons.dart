@@ -221,9 +221,9 @@ class GhostButton extends StatelessWidget {
       label: Text(label),
       style: OutlinedButton.styleFrom(
         foregroundColor:
-            isDark ? AppColors.adaptivePrimary : AppColors.violetDeep,
+            isDark ? AppColors.adaptivePrimary : AppColors.blue,
         side: BorderSide(
-          color: isDark ? AppColors.glassBorder : AppColors.violetDeep.withValues(alpha: 0.35),
+          color: isDark ? AppColors.glassBorder : AppColors.blue.withValues(alpha: 0.35),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),

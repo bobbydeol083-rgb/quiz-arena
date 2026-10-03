@@ -126,9 +126,9 @@ class AuthView extends GetView<AuthController> {
       () => Container(
         padding: const EdgeInsets.all(AppSpacing.xs),
         decoration: BoxDecoration(
-          color: AppColors.glass,
+          color: AppColors.adaptiveSoftTint,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: AppColors.glassBorder),
+          border: Border.all(color: AppColors.adaptiveBorder),
         ),
         child: Row(
           children: [

@@ -18,8 +18,8 @@ class HomeView extends GetView<HomeController> {
       currentIndex: 0,
       body: RefreshIndicator(
         onRefresh: controller.refreshAll,
-        color: AppColors.violet,
-        backgroundColor: AppColors.surfaceElevated,
+        color: AppColors.blue,
+        backgroundColor: AppColors.elevatedOf(context),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: AppInsets.screen,
