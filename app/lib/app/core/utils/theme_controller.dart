@@ -6,14 +6,15 @@ import '../theme/app_theme.dart';
 import '../values/app_config.dart';
 
 /// Reactive light/dark theme switch, persisted in GetStorage.
+/// Light (sky arena) is the default theme.
 class ThemeController extends GetxController {
-  final Rx<ThemeMode> mode = ThemeMode.dark.obs;
+  final Rx<ThemeMode> mode = ThemeMode.light.obs;
 
   @override
   void onInit() {
     super.onInit();
     final stored = GetStorage().read<String>(AppConfig.kThemeMode);
-    mode.value = stored == 'light' ? ThemeMode.light : ThemeMode.dark;
+    mode.value = stored == 'dark' ? ThemeMode.dark : ThemeMode.light;
     arenaBrightness.value =
         isDark ? Brightness.dark : Brightness.light;
   }

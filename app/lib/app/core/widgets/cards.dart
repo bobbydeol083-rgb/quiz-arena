@@ -6,7 +6,8 @@ import 'package:shimmer/shimmer.dart';
 import '../theme/app_theme.dart';
 import '../values/app_values.dart';
 
-/// Frosted-glass card used across the app.
+/// Signature card used across the app: frosted glass on dark,
+/// clean white with a soft blue shadow on light.
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -37,19 +38,23 @@ class GlassCard extends StatelessWidget {
           height: height,
           padding: padding ?? AppInsets.card,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.glass : Colors.white.withValues(alpha: 0.75),
+            color: isDark
+                ? AppColors.glass
+                : Colors.white.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: isDark
                   ? AppColors.glassBorder
-                  : AppColors.violetDeep.withValues(alpha: 0.12),
+                  : AppColors.lightBorder.withValues(alpha: 0.7),
               width: 1,
             ),
-            gradient: AppGradients.cardSheen,
+            gradient: isDark ? AppGradients.cardSheen : null,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
-                blurRadius: 24,
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.25)
+                    : AppColors.blue.withValues(alpha: 0.10),
+                blurRadius: isDark ? 24 : 20,
                 offset: const Offset(0, 10),
               ),
             ],
