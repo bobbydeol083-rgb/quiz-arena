@@ -11,6 +11,10 @@ import '../controllers/bluff_controller.dart';
 class BluffView extends GetView<BluffController> {
   const BluffView({super.key});
 
+  /// Short display id that never throws, however short the id is.
+  static String _shortId(String id, [int len = 4]) =>
+      id.length <= len ? id : '${id.substring(0, len)}…';
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
@@ -366,7 +370,7 @@ class BluffView extends GetView<BluffController> {
                       Text(
                         isMe
                             ? 'You'
-                            : 'Player ${d.userId.substring(0, 4)}…',
+                            : 'Player ${_shortId(d.userId)}',
                         style: text.bodyMedium?.copyWith(
                           fontWeight: isMe
                               ? FontWeight.bold
@@ -430,7 +434,7 @@ class BluffView extends GetView<BluffController> {
                                 Text(
                                   isMe
                                       ? 'You'
-                                      : 'Player ${s.userId.substring(0, 4)}…',
+                                      : 'Player ${_shortId(s.userId)}',
                                   style: text.titleMedium,
                                 ),
                                 if (title.isNotEmpty)
@@ -588,7 +592,7 @@ class BluffView extends GetView<BluffController> {
             ...others.map(
               (s) => ListTile(
                 title: Text(
-                    'Player ${s.userId.substring(0, 6)}… (${s.score} pts)'),
+                    'Player ${_shortId(s.userId, 6)} (${s.score} pts)'),
                 trailing:
                     const Icon(Icons.arrow_forward_rounded),
                 onTap: () {
