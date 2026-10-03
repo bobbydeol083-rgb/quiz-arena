@@ -1,0 +1,319 @@
+// Preview golden screenshots — renders the REAL app screens with
+// mock-driven controller state and writes PNGs (run with --update-goldens).
+// Not a functional test; excluded from CI goldens.
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+
+import 'package:quiz_arena/app/core/theme/app_theme.dart';
+import 'package:quiz_arena/app/data/models/models.dart';
+import 'package:quiz_arena/app/data/providers/api_service.dart';
+import 'package:quiz_arena/app/data/providers/socket_service.dart';
+import 'package:quiz_arena/app/data/repositories/auth_repository.dart';
+import 'package:quiz_arena/app/data/repositories/pack_repository.dart';
+import 'package:quiz_arena/app/modules/bluff/controllers/bluff_controller.dart';
+import 'package:quiz_arena/app/modules/bluff/views/bluff_view.dart';
+import 'package:quiz_arena/app/modules/packs/controllers/pack_editor_controller.dart';
+import 'package:quiz_arena/app/modules/packs/controllers/packs_controller.dart';
+import 'package:quiz_arena/app/modules/packs/views/pack_editor_view.dart';
+import 'package:quiz_arena/app/modules/packs/views/packs_view.dart';
+
+const _fontDir =
+    '/home/hatch/sdks/flutter/bin/cache/artifacts/material_fonts';
+
+Future<void> _loadFonts() async {
+  final loader = FontLoader('Roboto')
+    ..addFont(File('$_fontDir/Roboto-Regular.ttf')
+        .readAsBytes()
+        .then((b) => ByteData.sublistView(b)))
+    ..addFont(File('$_fontDir/Roboto-Bold.ttf')
+        .readAsBytes()
+        .then((b) => ByteData.sublistView(b)));
+  await loader.load();
+}
+
+/// Test-only replica of AppTheme.dark(): identical colors, shapes and
+/// spacing, but plain Roboto text (google_fonts can't fetch Inter/Sora
+/// under flutter_test and throws). Layout and widgets are the real code.
+ThemeData _theme() {
+  const scheme = ColorScheme.dark(
+    primary: AppColors.violet,
+    secondary: AppColors.cyan,
+    tertiary: AppColors.magenta,
+    surface: AppColors.surface,
+    error: AppColors.error,
+    onPrimary: Colors.white,
+    onSecondary: Colors.white,
+    onSurface: AppColors.textPrimary,
+  );
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: scheme,
+    scaffoldBackgroundColor: AppColors.midnight,
+    fontFamily: 'Roboto',
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+      titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+      bodyLarge: TextStyle(fontSize: 16, color: AppColors.textPrimary),
+      bodyMedium: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+      bodySmall: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      foregroundColor: AppColors.textPrimary,
+    ),
+    cardTheme: CardThemeData(
+      color: AppColors.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: const BorderSide(color: AppColors.glassBorder, width: 1),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surfaceElevated,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.glassBorder),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.glassBorder),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.violet, width: 1.6),
+      ),
+      hintStyle: const TextStyle(color: AppColors.textMuted),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: AppColors.surfaceElevated,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+    ),
+  );
+}
+
+void _deps() {
+  final api = ApiService(baseUrl: 'http://127.0.0.1:1');
+  Get.put<SocketService>(SocketService());
+  final auth = AuthRepository(api: api);
+  auth.currentUser.value = AppUser.demo();
+  Get.put<AuthRepository>(auth);
+  Get.put<PackRepository>(PackRepository(api: api));
+}
+
+BluffController _bluff() {
+  final c = BluffController(
+    socket: Get.find<SocketService>(),
+    auth: Get.find<AuthRepository>(),
+  );
+  Get.put<BluffController>(c);
+  c.totalRounds.value = 5;
+  return c;
+}
+
+Future<void> _pumpScreen(WidgetTester tester, Widget screen) async {
+  tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+  tester.view.devicePixelRatio = 3.0;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+  await tester.pumpWidget(
+    GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: _theme(),
+      home: screen,
+    ),
+  );
+  // Settle entrance animations without waiting on the 1s ticker forever.
+  for (var i = 0; i < 6; i++) {
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+}
+
+Future<void> _golden(WidgetTester tester, String name) async {
+  await expectLater(
+    find.byType(MaterialApp),
+    matchesGoldenFile('goldens/preview_$name.png'),
+  );
+}
+
+/// BluffController runs a 1s countdown ticker; close it explicitly so the
+/// test framework's pending-timer invariant is satisfied.
+void _closeBluff() {
+  if (Get.isRegistered<BluffController>()) {
+    Get.delete<BluffController>(force: true);
+  }
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'getApplicationDocumentsDirectory') {
+        return '/tmp/quiz_arena_preview';
+      }
+      return null;
+    });
+    await GetStorage.init();
+    await _loadFonts();
+    Get.testMode = true;
+  });
+
+  tearDown(() => Get.reset());
+
+  testWidgets('preview: bluff write phase', (tester) async {
+    _deps();
+    final c = _bluff();
+    c.round.value = 2;
+    c.question.value =
+        "What animal's collective noun is 'a parliament'?";
+    c.fakesIn.value = 2;
+    c.fakesTotal.value = 4;
+    c.writeEndsAt.value =
+        DateTime.now().millisecondsSinceEpoch + 22000;
+    c.phase.value = BluffPhase.write;
+    await _pumpScreen(tester, const BluffView());
+    await _golden(tester, 'bluff_write');
+    _closeBluff();
+  });
+
+  testWidgets('preview: bluff vote phase', (tester) async {
+    _deps();
+    final c = _bluff();
+    c.round.value = 2;
+    c.options.assignAll(const [
+      BluffOption(id: 'truth', text: 'Owls'),
+      BluffOption(id: 'fake:u2', text: 'Crows'),
+      BluffOption(id: 'fake:u3', text: 'Penguins'),
+      BluffOption(id: 'fake:local-demo', text: 'Parrots'),
+    ]);
+    c.voteEndsAt.value =
+        DateTime.now().millisecondsSinceEpoch + 14000;
+    c.phase.value = BluffPhase.vote;
+    await _pumpScreen(tester, const BluffView());
+    await _golden(tester, 'bluff_vote');
+    _closeBluff();
+  });
+
+  testWidgets('preview: bluff reveal phase', (tester) async {
+    _deps();
+    final c = _bluff();
+    c.round.value = 2;
+    c.correctOptionId.value = 'truth';
+    c.options.assignAll(const [
+      BluffOption(id: 'truth', text: 'Owls'),
+      BluffOption(id: 'fake:u2', text: 'Crows', authorId: 'u2'),
+      BluffOption(id: 'fake:u3', text: 'Penguins', authorId: 'u3'),
+      BluffOption(id: 'fake:local-demo', text: 'Parrots', authorId: 'local-demo'),
+    ]);
+    c.deltas.assignAll(const [
+      BluffDelta(userId: 'local-demo', delta: 100, votedTruth: false, fooled: 2),
+      BluffDelta(userId: 'u2', delta: 150, votedTruth: true, fooled: 1),
+      BluffDelta(userId: 'u3', delta: 50, votedTruth: false, fooled: 1),
+    ]);
+    c.scores.assignAll(const [
+      BluffScore(userId: 'local-demo', score: 325, truths: 1, fooled: 3),
+      BluffScore(userId: 'u2', score: 280, truths: 2, fooled: 1),
+    ]);
+    c.roast.value = 'The truth was RIGHT THERE and you walked past it.';
+    c.phase.value = BluffPhase.reveal;
+    await _pumpScreen(tester, const BluffView());
+    await _golden(tester, 'bluff_reveal');
+    _closeBluff();
+  });
+
+  testWidgets('preview: bluff final standings', (tester) async {
+    _deps();
+    final c = _bluff();
+    c.round.value = 5;
+    c.scores.assignAll(const [
+      BluffScore(userId: 'local-demo', score: 640, truths: 3, fooled: 8),
+      BluffScore(userId: 'u2', score: 510, truths: 4, fooled: 2),
+      BluffScore(userId: 'u3', score: 220, truths: 1, fooled: 1),
+    ]);
+    c.titles.assignAll({
+      'local-demo': 'Master Deceiver',
+      'u2': 'Truth Hunter',
+      'u3': 'Bluff Rookie',
+    });
+    c.winner.value = {'userId': 'local-demo', 'username': 'Boss'};
+    c.phase.value = BluffPhase.done;
+    await _pumpScreen(tester, const BluffView());
+    await _golden(tester, 'bluff_done');
+    _closeBluff();
+  });
+
+  testWidgets('preview: game packs browse', (tester) async {
+    _deps();
+    final c = PacksController(packs: Get.find<PackRepository>());
+    Get.put<PacksController>(c);
+    c.browsePacks.assignAll([
+      const GamePack(
+        id: 'p1',
+        title: 'Desi Pop Culture',
+        slug: 'p1',
+        description: 'A community pack full of Fake Facts trivia.',
+        label: 'Fake Facts',
+        mode: 'bluff',
+        questionCount: 12,
+        authorName: 'quizfan',
+        installs: 482,
+        plays: 1204,
+      ),
+      const GamePack(
+        id: 'p2',
+        title: 'Weird Science',
+        slug: 'p2',
+        description: 'A community pack full of Weird Science trivia.',
+        label: 'Weird Science',
+        mode: 'quiz',
+        questionCount: 20,
+        authorName: 'labrat',
+        installs: 351,
+        plays: 980,
+      ),
+    ]);
+    await _pumpScreen(tester, const PacksView());
+    await _golden(tester, 'packs');
+  });
+
+  testWidgets('preview: pack editor', (tester) async {
+    _deps();
+    final c =
+        PackEditorController(packs: Get.find<PackRepository>());
+    Get.put<PackEditorController>(c);
+    c.titleCtrl.text = 'Desi Pop Culture';
+    c.labelCtrl.text = 'Fake Facts';
+    c.mode.value = 'bluff';
+    c.questions[0].question.text =
+        "What animal's collective noun is 'a parliament'?";
+    c.questions[0].options[0].text = 'Owls';
+    c.questions[0].options[1].text = 'Crows';
+    c.questions[0].options[2].text = 'Parrots';
+    c.questions[0].options[3].text = 'Penguins';
+    await _pumpScreen(tester, const PackEditorView());
+    await _golden(tester, 'pack_editor');
+  });
+}
