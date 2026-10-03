@@ -319,6 +319,12 @@ class _ZonesSection extends StatelessWidget {
           route: Routes.trueFalse,
         ),
         const _ZoneTile(
+          icon: EliteAssets.versus,
+          title: 'Contests',
+          subtitle: 'Timed prize contests — real coin rewards',
+          route: Routes.contest,
+        ),
+        const _ZoneTile(
           icon: EliteAssets.exam,
           title: 'Exam mode',
           subtitle: '20 questions, 20 minutes, graded A+ to F',

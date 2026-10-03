@@ -8,5 +8,6 @@ const router = Router();
 
 router.post('/daily-claim', requireAuth, ctrl.claimDaily);
 router.get('/referral', requireAuth, ctrl.referralInfo);
+router.get('/transactions', requireAuth, ctrl.transactions);
 
 module.exports = router;

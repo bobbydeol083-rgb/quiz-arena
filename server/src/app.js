@@ -44,6 +44,7 @@ function createApp() {
   app.use('/api/rooms', require('./routes/rooms'));
   app.use('/api/packs', require('./routes/packs'));
   app.use('/api/rewards', require('./routes/rewards'));
+  app.use('/api/contests', require('./routes/contests'));
 
   app.use(notFound);
   app.use(errorHandler);

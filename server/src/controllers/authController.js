@@ -6,6 +6,7 @@ const env = require('../config/env');
 const { signAccessToken, signRefreshToken, newJti, hashToken, verifyToken } = require('../utils/tokens');
 const { publicUser } = require('../utils/serialize');
 const { errorBody, asyncHandler } = require('../utils/http');
+const { applyCoins } = require('../utils/coins');
 
 async function issueTokenPair(user) {
   const jti = newJti();
@@ -68,10 +69,10 @@ const register = asyncHandler(async (req, res) => {
       referralCode: String(referralCode).trim().toUpperCase(),
     });
     if (referrer && String(referrer._id) !== String(user._id)) {
-      referrer.coins += REFERRER_REWARD;
+      await applyCoins(referrer, REFERRER_REWARD, `Referral: ${user.username} joined`, 'referral', user._id);
       referrer.referralCount += 1;
       await referrer.save();
-      user.coins += REFEREE_REWARD;
+      await applyCoins(user, REFEREE_REWARD, 'Referral signup bonus', 'referral', referrer._id);
       user.referredBy = referrer._id;
       await user.save();
     }

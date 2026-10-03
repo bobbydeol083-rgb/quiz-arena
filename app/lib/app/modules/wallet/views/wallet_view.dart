@@ -6,6 +6,8 @@ import 'package:quiz_arena/app/core/values/app_values.dart';
 import 'package:quiz_arena/app/core/values/elite_assets.dart';
 import 'package:quiz_arena/app/core/widgets/widgets.dart';
 import 'package:quiz_arena/app/data/repositories/auth_repository.dart';
+import 'package:quiz_arena/app/data/repositories/contest_repository.dart';
+import 'package:quiz_arena/app/data/providers/api_service.dart';
 import 'package:quiz_arena/app/data/services/coin_ledger.dart';
 import 'package:quiz_arena/app/routes/app_routes.dart';
 
@@ -155,33 +157,73 @@ class WalletView extends StatelessWidget {
 
   Widget _history(
       BuildContext context, TextTheme text, CoinLedger ledger) {
-    final entries = ledger.entries();
-    if (entries.isEmpty) {
-      return GlassCard(
-        child: Center(
-          child: Padding(
-            padding: AppInsets.card,
-            child: Text(
-              'No transactions yet.\nEarn your first coins above!',
-              style: text.bodyMedium?.copyWith(
-                color: AppColors.textSecondaryOf(context),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _serverTransactions(),
+      builder: (context, snap) {
+        final server = snap.data?['transactions'] as List?;
+        if (server != null && server.isNotEmpty) {
+          return _txList(
+            context,
+            text,
+            server.map((e) => Map<String, dynamic>.from(e as Map)).toList(),
+          );
+        }
+        // Offline / not logged in: fall back to the local ledger.
+        final entries = ledger.entries();
+        if (entries.isEmpty) {
+          return GlassCard(
+            child: Center(
+              child: Padding(
+                padding: AppInsets.card,
+                child: Text(
+                  'No transactions yet.\nEarn your first coins above!',
+                  style: text.bodyMedium?.copyWith(
+                    color: AppColors.textSecondaryOf(context),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-        ),
-      );
+          );
+        }
+        return _txList(
+          context,
+          text,
+          entries
+              .map((e) => {
+                    'amount': e.amount,
+                    'reason': e.reason,
+                    'createdAt': e.at.toIso8601String(),
+                  })
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> _serverTransactions() async {
+    try {
+      final repo = Get.isRegistered<ContestRepository>()
+          ? Get.find<ContestRepository>()
+          : ContestRepository(api: Get.find<ApiService>());
+      return await repo.transactions(limit: 20);
+    } catch (_) {
+      return const {};
     }
+  }
+
+  Widget _txList(BuildContext context, TextTheme text,
+      List<Map<String, dynamic>> txs) {
     return GlassCard(
       child: Column(
         children: [
-          for (var i = 0; i < entries.length && i < 20; i++)
+          for (var i = 0; i < txs.length && i < 20; i++)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
               child: Row(
                 children: [
                   EliteAssets.svg(
-                      entries[i].amount >= 0
+                      (txs[i]['amount'] as num? ?? 0) >= 0
                           ? EliteAssets.earnedCoin
                           : EliteAssets.coin,
                       size: 28),
@@ -190,9 +232,12 @@ class WalletView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(entries[i].reason, style: text.bodyMedium),
+                        Text('${txs[i]['reason'] ?? ''}',
+                            style: text.bodyMedium),
                         Text(
-                          _fmtDate(entries[i].at),
+                          _fmtDate(DateTime.tryParse(
+                                  '${txs[i]['createdAt'] ?? ''}') ??
+                              DateTime.now()),
                           style: text.bodySmall?.copyWith(
                             color:
                                 AppColors.textSecondaryOf(context),
@@ -201,17 +246,23 @@ class WalletView extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Text(
-                    '+${entries[i].amount}',
-                    style: text.titleMedium?.copyWith(
-                      color: AppColors.successOf(context),
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  _amountText(text,
+                      (txs[i]['amount'] as num?)?.toInt() ?? 0, context),
                 ],
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _amountText(TextTheme text, int amount, BuildContext context) {
+    final positive = amount >= 0;
+    return Text(
+      '${positive ? '+' : ''}$amount',
+      style: text.titleMedium?.copyWith(
+        color: positive ? AppColors.successOf(context) : AppColors.error,
+        fontWeight: FontWeight.w800,
       ),
     );
   }

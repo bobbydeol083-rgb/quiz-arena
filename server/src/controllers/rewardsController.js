@@ -1,7 +1,9 @@
 'use strict';
 
 const User = require('../models/User');
+const CoinTransaction = require('../models/CoinTransaction');
 const { errorBody, asyncHandler } = require('../utils/http');
+const { applyCoins } = require('../utils/coins');
 
 // Daily scratch-card reward tiers (coins) with weights.
 const DAILY_TIERS = [
@@ -40,7 +42,7 @@ const claimDaily = asyncHandler(async (req, res) => {
     return res.status(409).json(errorBody('ALREADY_CLAIMED', 'Daily reward already claimed today'));
   }
   const awarded = rollDailyTier();
-  user.coins += awarded;
+  await applyCoins(user, awarded, 'Daily scratch reward', 'daily', null);
   user.lastDailyClaim = today;
   await user.save();
   res.json({ awarded, coins: user.coins, tiers: DAILY_TIERS.map((t) => t.coins) });
@@ -61,4 +63,22 @@ const referralInfo = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { claimDaily, referralInfo, DAILY_TIERS };
+// GET /api/rewards/transactions — server-side coin ledger.
+const transactions = asyncHandler(async (req, res) => {
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const txs = await CoinTransaction.find({ userId: req.user.id })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+  res.json({
+    transactions: txs.map((t) => ({
+      id: String(t._id),
+      amount: t.amount,
+      reason: t.reason,
+      balanceAfter: t.balanceAfter,
+      createdAt: t.createdAt,
+    })),
+  });
+});
+
+module.exports = { claimDaily, referralInfo, transactions, DAILY_TIERS };

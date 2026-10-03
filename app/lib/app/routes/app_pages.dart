@@ -46,6 +46,9 @@ import '../modules/statistics/bindings/statistics_binding.dart';
 import '../modules/statistics/views/statistics_view.dart';
 import '../modules/wallet/views/wallet_view.dart';
 import '../modules/bookmarks/views/bookmarks_view.dart';
+import '../modules/contest/bindings/contest_binding.dart';
+import '../modules/contest/views/contest_view.dart';
+import '../modules/contest/views/contest_detail_view.dart';
 
 /// Named route table. Every page uses the signature Arena transition
 /// (fade + scale + slight slide); the four bottom-nav tabs use the faster
@@ -224,6 +227,20 @@ class AppPages {
     GetPage(
       name: Routes.bookmarks,
       page: () => const BookmarksView(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.contest,
+      page: () => const ContestView(),
+      binding: ContestBinding(),
+      customTransition: ArenaPageTransition(),
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+    GetPage(
+      name: Routes.contestDetail,
+      page: () => const ContestDetailView(),
+      binding: ContestDetailBinding(),
       customTransition: ArenaPageTransition(),
       transitionDuration: const Duration(milliseconds: 350),
     ),

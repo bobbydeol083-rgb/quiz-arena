@@ -31,6 +31,8 @@ class Routes {
   static const String statistics = '/statistics';
   static const String wallet = '/wallet';
   static const String bookmarks = '/bookmarks';
+  static const String contest = '/contest';
+  static const String contestDetail = '/contest/:id';
 
   /// Bottom-nav tabs (order matters for the sliding indicator).
   static const List<String> tabs = [home, discover, leaderboard, profile];

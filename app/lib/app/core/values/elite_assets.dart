@@ -60,7 +60,6 @@ class EliteAssets {
   // ---- Rewards --------------------------------------------------------------------------
   static const String rewardConfetti = '$_base/reward_confetti.svg';
   static const String scratchCover = '$_base/scratchCardCover.png';
-  static const String confettiLottie = '$_base/confetti.json';
   static const String successLottie = '$_base/success.json';
   static const String defeatLottie = '$_base/defeats.json';
 
