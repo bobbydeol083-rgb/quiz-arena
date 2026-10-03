@@ -36,72 +36,72 @@ Future<void> _loadFonts() async {
   await loader.load();
 }
 
-/// Test-only replica of AppTheme.dark(): identical colors, shapes and
+/// Test-only replica of AppTheme.light(): identical colors, shapes and
 /// spacing, but plain Roboto text (google_fonts can't fetch Inter/Sora
 /// under flutter_test and throws). Layout and widgets are the real code.
 ThemeData _theme() {
-  const scheme = ColorScheme.dark(
-    primary: AppColors.violet,
-    secondary: AppColors.cyan,
-    tertiary: AppColors.magenta,
-    surface: AppColors.surface,
+  const scheme = ColorScheme.light(
+    primary: AppColors.blue,
+    secondary: AppColors.sky,
+    tertiary: AppColors.bubble,
+    surface: AppColors.lightSurface,
     error: AppColors.error,
     onPrimary: Colors.white,
     onSecondary: Colors.white,
-    onSurface: AppColors.textPrimary,
+    onSurface: AppColors.lightText,
   );
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     colorScheme: scheme,
-    scaffoldBackgroundColor: AppColors.midnight,
+    scaffoldBackgroundColor: AppColors.lightBg,
     fontFamily: 'Roboto',
     textTheme: const TextTheme(
-      displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-      titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-      bodyLarge: TextStyle(fontSize: 16, color: AppColors.textPrimary),
-      bodyMedium: TextStyle(fontSize: 14, color: AppColors.textPrimary),
-      bodySmall: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+      displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: AppColors.lightText),
+      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.lightText),
+      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.lightText),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.lightText),
+      titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.lightText),
+      bodyLarge: TextStyle(fontSize: 16, color: AppColors.lightText),
+      bodyMedium: TextStyle(fontSize: 14, color: AppColors.lightText),
+      bodySmall: TextStyle(fontSize: 12, color: AppColors.lightTextSecondary),
+      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.lightText),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: true,
-      foregroundColor: AppColors.textPrimary,
+      foregroundColor: AppColors.lightText,
     ),
     cardTheme: CardThemeData(
-      color: AppColors.surface,
+      color: AppColors.lightSurface,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: const BorderSide(color: AppColors.glassBorder, width: 1),
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: AppColors.lightBorder, width: 1),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surfaceElevated,
+      fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.glassBorder),
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: AppColors.lightBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.glassBorder),
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: AppColors.lightBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.violet, width: 1.6),
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: AppColors.blue, width: 1.6),
       ),
-      hintStyle: const TextStyle(color: AppColors.textMuted),
+      hintStyle: const TextStyle(color: AppColors.lightTextMuted),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
     ),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: AppColors.surfaceElevated,
+      backgroundColor: AppColors.lightText,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),

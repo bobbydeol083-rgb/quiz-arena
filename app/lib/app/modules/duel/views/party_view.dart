@@ -135,16 +135,16 @@ class PartyView extends GetView<PartyController> {
               label: Text('${c.icon} ${c.name}'),
               selected: controller.selectedCategory.value == c.id,
               onSelected: (_) => controller.selectedCategory.value = c.id,
-              selectedColor: AppColors.violet.withValues(alpha: 0.25),
-              backgroundColor: AppColors.surfaceElevated,
+              selectedColor: AppColors.blue.withValues(alpha: 0.18),
+              backgroundColor: AppColors.adaptiveElevated,
               labelStyle: TextStyle(
                 color: AppColors.adaptivePrimary,
                 fontWeight: FontWeight.w600,
               ),
               side: BorderSide(
                 color: controller.selectedCategory.value == c.id
-                    ? AppColors.violet
-                    : AppColors.glassBorder,
+                    ? AppColors.blue
+                    : AppColors.adaptiveBorder,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.pill),

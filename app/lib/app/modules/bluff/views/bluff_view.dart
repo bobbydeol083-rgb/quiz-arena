@@ -307,7 +307,7 @@ class BluffView extends GetView<BluffController> {
                                           : '🎭 A bluff',
                                   style: text.bodySmall?.copyWith(
                                     color: isTruth
-                                        ? Colors.greenAccent
+                                        ? AppColors.successOf(Get.context!)
                                         : AppColors.textSecondaryOf(
                                             Get.context!),
                                   ),
@@ -316,8 +316,9 @@ class BluffView extends GetView<BluffController> {
                             ),
                           ),
                           if (isTruth)
-                            const Icon(Icons.verified_rounded,
-                                color: Colors.greenAccent),
+                            Icon(Icons.verified_rounded,
+                                color:
+                                    AppColors.successOf(Get.context!)),
                         ],
                       ),
                     ),
@@ -578,7 +579,7 @@ class BluffView extends GetView<BluffController> {
       Container(
         padding: AppInsets.screen,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.adaptiveSurface,
           borderRadius: const BorderRadius.vertical(
               top: Radius.circular(AppRadius.lg)),
         ),
