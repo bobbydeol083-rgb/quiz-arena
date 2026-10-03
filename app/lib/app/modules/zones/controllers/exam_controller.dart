@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:quiz_arena/app/data/models/question.dart';
@@ -32,6 +33,9 @@ class ExamController extends GetxController {
   final RxInt secondsLeft = totalSeconds.obs;
   final RxBool finished = false.obs;
   final RxBool loading = true.obs;
+
+  /// Drives the question PageView (Elite UI).
+  final PageController pageController = PageController();
 
   Timer? _timer;
 
@@ -71,6 +75,7 @@ class ExamController extends GetxController {
   @override
   void onClose() {
     _timer?.cancel();
+    pageController.dispose();
     super.onClose();
   }
 
@@ -103,15 +108,35 @@ class ExamController extends GetxController {
   }
 
   void next() {
-    if (index.value + 1 < questions.length) index.value++;
+    if (index.value + 1 < questions.length) {
+      pageController.nextPage(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void prev() {
-    if (index.value > 0) index.value--;
+    if (index.value > 0) {
+      pageController.previousPage(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void jumpTo(int i) {
-    if (i >= 0 && i < questions.length) index.value = i;
+    if (i >= 0 && i < questions.length) {
+      if (pageController.hasClients) {
+        pageController.animateToPage(
+          i,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      } else {
+        index.value = i;
+      }
+    }
   }
 
   Future<void> finish() async {
