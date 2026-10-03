@@ -99,9 +99,9 @@ class LeaderboardView extends GetView<LeaderboardController> {
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.adaptiveSurface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: AppColors.glassBorder),
+          border: Border.all(color: AppColors.adaptiveBorder),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {

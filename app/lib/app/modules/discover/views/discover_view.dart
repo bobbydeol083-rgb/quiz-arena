@@ -73,9 +73,9 @@ class DiscoverView extends GetView<DiscoverController> {
       final active = controller.tab.value;
       return Container(
         decoration: BoxDecoration(
-          color: AppColors.glass,
+          color: AppColors.softTintOf(context),
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: AppColors.glassBorder),
+          border: Border.all(color: AppColors.borderOf(context)),
         ),
         child: Row(
           children: List.generate(labels.length, (i) {

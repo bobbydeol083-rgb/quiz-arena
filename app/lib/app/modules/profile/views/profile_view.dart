@@ -201,12 +201,12 @@ class ProfileView extends GetView<ProfileController> {
       decoration: BoxDecoration(
         color: b.unlocked
             ? color.withValues(alpha: 0.15)
-            : AppColors.surface.withValues(alpha: 0.6),
+            : AppColors.adaptiveSurface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: b.unlocked
               ? color.withValues(alpha: 0.6)
-              : AppColors.glassBorder,
+              : AppColors.adaptiveBorder,
         ),
       ),
       child: Column(

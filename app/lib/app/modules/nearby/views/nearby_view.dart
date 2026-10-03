@@ -152,12 +152,12 @@ class NearbyView extends GetView<NearbyController> {
                 ),
                 decoration: BoxDecoration(
                   gradient: selected ? AppGradients.primary : null,
-                  color: selected ? null : AppColors.surface,
+                  color: selected ? null : AppColors.adaptiveSurface,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   border: Border.all(
                     color: selected
                         ? Colors.transparent
-                        : AppColors.glassBorder,
+                        : AppColors.adaptiveBorder,
                   ),
                 ),
                 child: Row(
@@ -192,9 +192,9 @@ class NearbyView extends GetView<NearbyController> {
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.adaptiveSurface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.glassBorder),
+          border: Border.all(color: AppColors.adaptiveBorder),
         ),
         child: Row(
           children: [
